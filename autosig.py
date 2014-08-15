@@ -7,8 +7,10 @@ Generates the System Implementation Guide.
 
 Copyright (c) 2014  Nexenta Systems
 William Kettler <william.kettler@nexenta.com>
+Pete Hartman <pete.hartman@nexenta.com>
 """
 
+import os
 import sys
 import subprocess
 import signal
@@ -16,6 +18,8 @@ import getopt
 import simplejson
 import datetime
 
+# using global to avoid complex passing
+collector = None
 
 def usage():
     """
@@ -28,7 +32,7 @@ def usage():
     """
     cmd = sys.argv[0]
 
-    print "%s [-h] [-c CONFIG]" % cmd
+    print "%s [-h] [-c CONFIG] [-C COLLECTORDIR]" % cmd
     print ""
     print "Nexenta Auto-SIG"
     print ""
@@ -36,6 +40,7 @@ def usage():
     print ""
     print "    -h, --help           print usage"
     print "    -c, --config         config file"
+    print "    -C, --collector      collector directory"
 
 
 class Timeout(Exception):
@@ -93,6 +98,43 @@ def execute(cmd, timeout=None):
         output = None
 
     return retcode, output
+
+
+def execute_collector(location, document, ignore=False, timeout=None):
+    """
+    Read data from collector as defined in the config file and write it to
+    the SIG document.
+
+    Inputs:
+        location (str): collector file to read
+        document (Document): Document instance
+        ignore (bool): Do not exit on errors
+        timeout (int): Command timeout in seconds
+    Outputs:
+        None
+    """
+    # allow null to ignore this for higher levels of the document tree
+    if not location:
+        return
+
+    try:
+        retcode, output = execute("cat %s/%s" % (collector, location), timeout=timeout)
+    except Exception, err:
+        log("ERROR", "could not read file \"%s/%s\"" % (collector, location))
+        log("ERROR", str(err))
+        if not ignore:
+            sys.exit(1)
+
+    # Check the command return code
+    if retcode:
+        log("ERROR", "collector read failed \"%s/%s\"" % (collector, location))
+        log("ERROR", output)
+        if not ignore:
+            sys.exit(1)
+
+    document.print_string("[%s/%s]" % (collector, location))
+    document.print_newline()
+    document.print_paragraph(output)
 
 
 def execute_cmd(cmd, document, ignore=False, timeout=None):
@@ -353,7 +395,10 @@ def hostname():
     Outputs:
         hostname (str): System hostname
     """
-    retcode, hostname = execute("hostname")
+    if collector:
+        retcode, hostname = execute("cat %s/network/nodename" % collector)
+    else:
+        retcode, hostname = execute("hostname")
     if retcode:
         log("ERROR", "failed to get system hostname")
         log("ERROR", output)
@@ -370,7 +415,7 @@ def sections(section, level, document):
     Outputs:
     """
     # Valid keys
-    valid = ["title", "enabled", "paragraph", "cmd", "nmc", "sections"]
+    valid = ["title", "enabled", "paragraph", "cmd", "nmc", "sections", "collector"]
     # Required keys
     required = ["title", "enabled"]
 
@@ -408,17 +453,26 @@ def sections(section, level, document):
             if paragraph is not None:
                 document.print_paragraph(paragraph)
 
-        # Handle command
-        if "cmd" in subsection:
-            cmd = subsection["cmd"]
-            if cmd is not None:
-                execute_cmd(cmd, document)
+        # Handle collector fields: alternative to both cmd and nmc
+        if collector:
+            if "collector" in subsection:
+                location = subsection["collector"]
+                execute_collector(location, document)
+            else:
+                log("WARN", "Collector generation specified but section \"%s\" has no collector subsection"
+                            % title)
+        else:
+            # Handle command
+            if "cmd" in subsection:
+                cmd = subsection["cmd"]
+                if cmd is not None:
+                    execute_cmd(cmd, document)
 
-        # Handle nmc
-        if "nmc" in subsection:
-            nmc = subsection["nmc"]
-            if nmc is not None:
-                execute_nmc(nmc, document)
+            # Handle nmc
+            if "nmc" in subsection:
+                nmc = subsection["nmc"]
+                if nmc is not None:
+                    execute_nmc(nmc, document)
 
         # Handle sections
         if "sections" in subsection:
@@ -429,11 +483,12 @@ def main():
     # Initialize variables
     version = "0.1"
     config = "autosig.conf"
+    global collector
     level = 0
 
     # Define the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], ":hc:", ["help", "config="])
+        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:", ["help", "config=", "collector="])
     except getopt.GetoptError, err:
         log("ERROR", str(err))
         usage()
@@ -446,6 +501,8 @@ def main():
             sys.exit()
         elif o in ("-c", "--config"):
             config = a
+        elif o in ("-C", "--collector"):
+            collector = a
 
     # Open the configuration file
     try:
@@ -465,6 +522,12 @@ def main():
         sys.exit(1)
     finally:
         fh.close()
+
+    # test existence to prevent confusing errors downstream
+    if collector:
+        if not os.path.isdir(collector):
+            log("ERROR", "No collector directory '%s'"% collector)
+            sys.exit(1)
 
     # Open the output file
     f = "nexenta-autosig-%s.txt" % hostname()
