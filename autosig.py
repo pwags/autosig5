@@ -18,8 +18,11 @@ import getopt
 import simplejson
 import datetime
 
-# using global to avoid complex passing
+# Define globals to avoid complex passing
+version = "0.2"
 collector = None
+sig = None
+
 
 def usage():
     """
@@ -100,16 +103,15 @@ def execute(cmd, timeout=None):
     return retcode, output
 
 
-def execute_collector(location, document, ignore=False, timeout=None):
+def execute_collector(location, ignore=False, timeout=None):
     """
     Read data from collector as defined in the config file and write it to
     the SIG document.
 
     Inputs:
         location (str): collector file to read
-        document (Document): Document instance
-        ignore (bool): Do not exit on errors
-        timeout (int): Command timeout in seconds
+        ignore   (bool): Do not exit on errors
+        timeout  (int): Command timeout in seconds
     Outputs:
         None
     """
@@ -118,7 +120,8 @@ def execute_collector(location, document, ignore=False, timeout=None):
         return
 
     try:
-        retcode, output = execute("cat %s/%s" % (collector, location), timeout=timeout)
+        retcode, output = execute("cat %s/%s" % (collector, location),
+                                  timeout=timeout)
     except Exception, err:
         log("ERROR", "could not read file \"%s/%s\"" % (collector, location))
         log("ERROR", str(err))
@@ -132,20 +135,19 @@ def execute_collector(location, document, ignore=False, timeout=None):
         if not ignore:
             sys.exit(1)
 
-    document.print_string("[%s/%s]" % (collector, location))
-    document.print_newline()
-    document.print_paragraph(output)
+    sig.print_string("[%s/%s]" % (collector, location))
+    sig.print_newline()
+    sig.print_paragraph(output)
 
 
-def execute_cmd(cmd, document, ignore=False, timeout=None):
+def execute_cmd(cmd, ignore=False, timeout=None):
     """
     Execute a command as defined in the config file and write it to the SIG
     document.
 
     Inputs:
-        cmd (str): Command to execute
-        document (Document): Document instance
-        ignore (bool): Do not exit on errors
+        cmd     (str): Command to execute
+        ignore  (bool): Do not exit on errors
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -165,20 +167,19 @@ def execute_cmd(cmd, document, ignore=False, timeout=None):
         if not ignore:
             sys.exit(1)
 
-    document.print_string("[%s]" % cmd)
-    document.print_newline()
-    document.print_paragraph(output)
+    sig.print_string("[%s]" % cmd)
+    sig.print_newline()
+    sig.print_paragraph(output)
 
 
-def execute_nmc(cmd, document, ignore=False, timeout=None):
+def execute_nmc(cmd, ignore=False, timeout=None):
     """
-    Execute a command as defined in the config file and write it to the SIG
-    document.
+    Execute an NMC command as defined in the config file and write it to the
+    SIG document.
 
     Inputs:
-        cmd (str): NMC command to execute
-        document (Document): Document instance
-        ignore (bool): Do not exit on errors
+        cmd     (str): NMC command to execute
+        ignore  (bool): Do not exit on errors
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -199,9 +200,78 @@ def execute_nmc(cmd, document, ignore=False, timeout=None):
         if not ignore:
             sys.exit(1)
 
-    document.print_string("[%s]" % nmc)
-    document.print_newline()
-    document.print_paragraph(output)
+    sig.print_string("[%s]" % nmc)
+    sig.print_newline()
+    sig.print_paragraph(output)
+
+
+def ssh(cmd, host, ignore=False, timeout=None):
+    """
+    Execute a command on a remote host as defined in the config file and write
+    it to the SIG document.
+
+    Inputs:
+        cmd     (str): Command to execute
+        host    (str): Remote host
+        ignore  (bool): Do not exit on errors
+        timeout (int): Command timeout in seconds
+    Output:
+        None
+    """
+    ssh_nmc = "ssh %s \"%s\"" % (host, cmd)
+    try:
+        retcode, output = execute(ssh_nmc, timeout)
+    except Exception, err:
+        log("ERROR", "SSH command execution failed \"%s\"" % ssh)
+        log("ERROR", str(err))
+        if not ignore:
+            sys.exit(1)
+
+    # Check the command return code
+    if retcode:
+        log("ERROR", "SSH command execution failed \"%s\"" % ssh)
+        log("ERROR", output)
+        if not ignore:
+            sys.exit(1)
+
+    sig.print_string("[%s]" % cmd)
+    sig.print_newline()
+    sig.print_paragraph(output)
+
+
+def ssh_nmc(cmd, host, ignore=False, timeout=None):
+    """
+    Execute an NMC command on a remote host as defined in the config file
+    and write it to the SIG document.
+
+    Inputs:
+        cmd     (str): NMC command to execute
+        host    (str): Remote host
+        ignore  (bool): Do not exit on errors
+        timeout (int): Command timeout in seconds
+    Outputs:
+        None
+    """
+    nmc = "nmc -c \"%s\"" % cmd
+    ssh_nmc = "ssh %s \"%s\"" % (host, nmc)
+    try:
+        retcode, output = execute(ssh_nmc, timeout)
+    except Exception, err:
+        log("ERROR", "SSH NMC command execution failed \"%s\"" % ssh_nmc)
+        log("ERROR", str(err))
+        if not ignore:
+            sys.exit(1)
+
+    # Check the command return code
+    if retcode:
+        log("ERROR", "SSH NMC command execution failed \"%s\"" % ssh_nmc)
+        log("ERROR", output)
+        if not ignore:
+            sys.exit(1)
+
+    sig.print_string("[%s]" % nmc)
+    sig.print_newline()
+    sig.print_paragraph(output)
 
 
 def log(severity, message):
@@ -407,15 +477,78 @@ def hostname():
     return hostname
 
 
-def sections(section, level, document):
+def rsf_partner():
+    """
+    Return cluster partner hostname.
+
+    Inputs:
+        None
+    Outputs:
+        partner (str): Partner hostname
+    """
+    rsfcli = "/opt/HAC/RSF-1/bin/rsfcli -i0"
+    hname = hostname()
+    partner = None
+    hosts = []
+    name = None
+
+    # First try to determine if the cluster is configured.
+    # 4.x makes determination tricky because the service is installed
+    # and running by default.
+
+    # Make sure services are running
+    try:
+        retcode, output = execute("%s isrunning" % rsfcli)
+    except Exception, err:
+        log("ERROR", "unable to determine RSF service state")
+        log("ERROR", output)
+        sys.exit(1)
+
+    # Non-zero return code means service is not running
+    if retcode:
+        log("INFO", "RSF service is not running")
+        return partner
+
+    log("INFO", "RSF service is running")
+
+    # Parse the RSF status
+    retcode, output = execute("/opt/HAC/RSF-1/bin/rsfcli status")
+    for l in output.splitlines():
+        if l.startswith("Contacted"):
+            name = l.split()[4].rstrip(",").strip("\"")
+        elif l.startswith("Host"):
+            hosts.append(l.split()[1].strip())
+
+    # Check for default 4.x configuration
+    if name == "Ready_For_Cluster_Configuration":
+        log("INFO", "Cluster is not configured")
+        return partner
+
+    log("INFO", "RSF cluster is configured")
+
+    # Determine which clustered host is the partner
+    for h in hosts:
+        if h is not hname:
+            partner = h
+            log("INFO", "%s is partner node" % partner)
+            break
+
+    return partner
+
+
+def sections(section, level):
     """
     Iterate over a section.
 
     Inputs:
+        section
+        level
     Outputs:
+        None
     """
     # Valid keys
-    valid = ["title", "enabled", "paragraph", "cmd", "nmc", "sections", "collector"]
+    valid = ["title", "enabled", "paragraph", "cmd", "nmc", "sections",
+             "collector"]
     # Required keys
     required = ["title", "enabled"]
 
@@ -423,13 +556,13 @@ def sections(section, level, document):
     for subsection in section:
         # Verify required keys are present
         for key in required:
-            if not key in subsection:
+            if key not in subsection:
                 log("ERROR", "Required key \"%s\" missing" % key)
                 sys.exit(1)
 
         # Verify there are no unsupported keys present
         for key in subsection:
-            if not key in valid:
+            if key not in valid:
                 log("ERROR", "Invalid key \"%s\"" % key)
                 sys.exit(1)
 
@@ -441,17 +574,17 @@ def sections(section, level, document):
         title = subsection["title"]
         log("INFO", "Section \"%s\"" % title)
         if level == 0:
-            document.print_title(title)
+            sig.print_title(title)
         elif level == 1:
-            document.print_section(title)
+            sig.print_section(title)
         else:
-            document.print_sub_section(title, level-2)
+            sig.print_sub_section(title, level-2)
 
         # Handle paragraph
         if "paragraph" in subsection:
             paragraph = subsection["paragraph"]
             if paragraph is not None:
-                document.print_paragraph(paragraph)
+                sig.print_paragraph(paragraph)
 
         # Handle collector fields: alternative to both cmd and nmc
         if collector:
@@ -459,36 +592,35 @@ def sections(section, level, document):
                 location = subsection["collector"]
                 execute_collector(location, document)
             else:
-                log("WARN", "Collector generation specified but section \"%s\" has no collector subsection"
-                            % title)
+                log("WARN", "Collector generation specified but section " \
+                            "\"%s\" has no collector subsection" % title)
         else:
             # Handle command
             if "cmd" in subsection:
                 cmd = subsection["cmd"]
                 if cmd is not None:
-                    execute_cmd(cmd, document)
+                    execute_cmd(cmd)
 
             # Handle nmc
             if "nmc" in subsection:
                 nmc = subsection["nmc"]
                 if nmc is not None:
-                    execute_nmc(nmc, document)
+                    execute_nmc(nmc)
 
         # Handle sections
         if "sections" in subsection:
-            sections(subsection["sections"], level + 1, document)
+            sections(subsection["sections"], level + 1)
 
 
 def main():
-    # Initialize variables
-    version = "0.1"
+    # Initialize variables required for parsing command line params
     config = "autosig.conf"
     global collector
-    level = 0
 
     # Define the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:", ["help", "config=", "collector="])
+        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:",
+                                   ["help", "config=", "collector="])
     except getopt.GetoptError, err:
         log("ERROR", str(err))
         usage()
@@ -523,14 +655,23 @@ def main():
     finally:
         fh.close()
 
-    # test existence to prevent confusing errors downstream
+    # Test existence to prevent confusing errors downstream
     if collector:
         if not os.path.isdir(collector):
-            log("ERROR", "No collector directory '%s'"% collector)
+            log("ERROR", "No collector directory '%s'" % collector)
             sys.exit(1)
 
+    # Initialize variables
+    level = 0
+    global sig
+    partner = rsf_partner()
+    hname = hostname()
+
     # Open the output file
-    f = "nexenta-autosig-%s.txt" % hostname()
+    if partner is None:
+        f = "nexenta-autosig-%s.txt" % hname
+    else:
+        f = "nexenta-autosig-%s-%s.txt" % (hname, partner)
     sig = Document(f)
     log("INFO", "Writing output to %s" % f)
 
@@ -538,7 +679,7 @@ def main():
     sig.print_string("Version %s" % version)
 
     # Iterate over the document sections
-    sections([outline], level, sig)
+    sections([outline], level)
 
     log("INFO", "Complete!")
 
