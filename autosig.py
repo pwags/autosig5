@@ -18,10 +18,11 @@ import getopt
 import simplejson
 import datetime
 
-# Define globals to avoid complex passing
+# Define globals for convenience and to avoid complex passing
 version = "0.2"
 collector = None
 sig = None
+ignore = False
 
 
 def usage():
@@ -44,6 +45,7 @@ def usage():
     print "    -h, --help           print usage"
     print "    -c, --config         config file"
     print "    -C, --collector      collector directory"
+    print "    -i, --ignore         ignore errors"
 
 
 class Timeout(Exception):
@@ -103,14 +105,13 @@ def execute(cmd, timeout=None):
     return retcode, output
 
 
-def execute_collector(location, ignore=False, timeout=None):
+def execute_collector(location, timeout=None):
     """
     Read data from collector as defined in the config file and write it to
     the SIG document.
 
     Inputs:
         location (str): collector file to read
-        ignore   (bool): Do not exit on errors
         timeout  (int): Command timeout in seconds
     Outputs:
         None
@@ -140,14 +141,13 @@ def execute_collector(location, ignore=False, timeout=None):
     sig.print_paragraph(output)
 
 
-def execute_cmd(cmd, ignore=False, timeout=None):
+def execute_cmd(cmd, timeout=None):
     """
     Execute a command as defined in the config file and write it to the SIG
     document.
 
     Inputs:
         cmd     (str): Command to execute
-        ignore  (bool): Do not exit on errors
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -172,14 +172,13 @@ def execute_cmd(cmd, ignore=False, timeout=None):
     sig.print_paragraph(output)
 
 
-def execute_nmc(cmd, ignore=False, timeout=None):
+def execute_nmc(cmd, timeout=None):
     """
     Execute an NMC command as defined in the config file and write it to the
     SIG document.
 
     Inputs:
         cmd     (str): NMC command to execute
-        ignore  (bool): Do not exit on errors
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -205,7 +204,7 @@ def execute_nmc(cmd, ignore=False, timeout=None):
     sig.print_paragraph(output)
 
 
-def ssh(cmd, host, ignore=False, timeout=None):
+def ssh(cmd, host, timeout=None):
     """
     Execute a command on a remote host as defined in the config file and write
     it to the SIG document.
@@ -213,7 +212,6 @@ def ssh(cmd, host, ignore=False, timeout=None):
     Inputs:
         cmd     (str): Command to execute
         host    (str): Remote host
-        ignore  (bool): Do not exit on errors
         timeout (int): Command timeout in seconds
     Output:
         None
@@ -239,7 +237,7 @@ def ssh(cmd, host, ignore=False, timeout=None):
     sig.print_paragraph(output)
 
 
-def ssh_nmc(cmd, host, ignore=False, timeout=None):
+def ssh_nmc(cmd, host, timeout=None):
     """
     Execute an NMC command on a remote host as defined in the config file
     and write it to the SIG document.
@@ -247,7 +245,6 @@ def ssh_nmc(cmd, host, ignore=False, timeout=None):
     Inputs:
         cmd     (str): NMC command to execute
         host    (str): Remote host
-        ignore  (bool): Do not exit on errors
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -547,14 +544,16 @@ def sections(section, level):
 
 
 def main():
-    # Initialize variables required for parsing command line params
-    config = "autosig.conf"
+    # Initialize variables
+    global sig
     global collector
+    global ignore
+    config = "autosig.conf"
 
     # Define the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:",
-                                   ["help", "config=", "collector="])
+        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:i:",
+                                   ["help", "config=", "collector=", "ignore"])
     except getopt.GetoptError, err:
         log("ERROR", str(err))
         usage()
@@ -569,6 +568,8 @@ def main():
             config = a
         elif o in ("-C", "--collector"):
             collector = a
+        elif o in ("-i", "--ignore"):
+            ignore = True
 
     # Open the configuration file
     try:
@@ -595,9 +596,7 @@ def main():
             log("ERROR", "No collector directory '%s'" % collector)
             sys.exit(1)
 
-    # Initialize variables
-    level = 0
-    global sig
+    # Get hostnames initialize variables
     partner = rsf_partner()
     hname = hostname()
 
@@ -613,6 +612,7 @@ def main():
     sig.print_string("Version %s" % version)
 
     # Iterate over the document sections
+    level = 0
     sections([outline], level)
 
     log("INFO", "Complete!")
