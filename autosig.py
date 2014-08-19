@@ -359,6 +359,17 @@ class Document:
         self._write('%s+ %s\n' % ('-' * level, s))
         self._write('\n')
 
+    def print_string(self, s):
+        """
+        Format and print a string.
+
+        Inputs:
+            s (str): String
+        Outputs:
+            None
+        """
+        self._write('%s\n' % s)
+
     def print_paragraph(self, p):
         """
         Format and print a paragraph.
@@ -552,7 +563,7 @@ def main():
 
     # Define the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:i:",
+        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:i",
                                    ["help", "config=", "collector=", "ignore"])
     except getopt.GetoptError, err:
         log("ERROR", str(err))
