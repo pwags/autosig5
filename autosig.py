@@ -36,7 +36,7 @@ def usage():
     """
     cmd = sys.argv[0]
 
-    print "%s [-h] [-c CONFIG] [-C COLLECTORDIR]" % cmd
+    print "%s [-h] [-c CONFIG] [-C COLLECTORDIR] [-i]" % cmd
     print ""
     print "Nexenta Auto-SIG"
     print ""
