@@ -362,17 +362,6 @@ class Document:
         self._write('%s+ %s\n' % ('-' * level, s))
         self._write('\n')
 
-    def print_string(self, s):
-        """
-        Format and print string.
-
-        Inputs:
-            s (str): String
-        Outputs:
-            None
-        """
-        self._write('%s\n' % s)
-
     def print_paragraph(self, p):
         """
         Format and print a paragraph.
@@ -383,61 +372,6 @@ class Document:
             None
         """
         self._write('%s\n\n' % p)
-
-    def print_pairs(self, d):
-        """
-        Format and print key/value pairs.
-        e.g.
-        key1 : value1
-        key2 : value2
-
-        Inputs:
-            d (dict): Dictionary of k/v pairs
-        Outputs:
-            None
-        """
-        self.print_newline()
-        for k, v in d.iteritems():
-            self._write(' %s : %s\n' % (k, v))
-        self.print_newline()
-
-    def print_num_list(self, l):
-        """
-        Print a numbered list.
-        e.g.
-         1. item1
-         2. item2
-         3. item3
-
-        Inputs:
-            l (list): List to print
-        Outputs:
-            None
-        """
-        self.print_newline()
-        num = 1
-        for i in l:
-            self._write(" %i. %s\n" % (num, i))
-            num += 1
-        self.print_newline()
-
-    def print_bul_list(self, l):
-        """
-        Print a bulleted list.
-        e.g.
-         - itme1
-         - item2
-         - item3
-
-        Inputs:
-            l (list): List to print
-        Outputs:
-            None
-        """
-        self.print_newline()
-        for i in l:
-            self._write(" - %s\n" % i)
-        self.print_newline()
 
     def print_newline(self):
         """
