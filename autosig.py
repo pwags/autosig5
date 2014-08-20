@@ -23,7 +23,8 @@ version = "0.2"
 collector = None
 sig = None
 ignore = False
-
+partner_node = None
+this_node = None
 
 def usage():
     """
@@ -167,8 +168,7 @@ def execute_cmd(cmd, timeout=None):
         if not ignore:
             sys.exit(1)
 
-    sig.print_string("[%s]" % cmd)
-    sig.print_newline()
+    sig.print_paragraph("%s" % this_node.upper())
     sig.print_paragraph(output)
 
 
@@ -199,8 +199,7 @@ def execute_nmc(cmd, timeout=None):
         if not ignore:
             sys.exit(1)
 
-    sig.print_string("[%s]" % nmc)
-    sig.print_newline()
+    sig.print_paragraph("%s" % this_node.upper())
     sig.print_paragraph(output)
 
 
@@ -216,24 +215,23 @@ def ssh(cmd, host, timeout=None):
     Output:
         None
     """
-    ssh_nmc = "ssh %s \"%s\"" % (host, cmd)
+    ssh_cmd = "ssh %s \"%s\"" % (host, cmd)
     try:
-        retcode, output = execute(ssh_nmc, timeout)
+        retcode, output = execute(ssh_cmd, timeout)
     except Exception, err:
-        log("ERROR", "SSH command execution failed \"%s\"" % ssh)
+        log("ERROR", "SSH command execution failed \"%s\"" % ssh_cmd)
         log("ERROR", str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        log("ERROR", "SSH command execution failed \"%s\"" % ssh)
+        log("ERROR", "SSH command execution failed \"%s\"" % ssh_cmd)
         log("ERROR", output)
         if not ignore:
             sys.exit(1)
 
-    sig.print_string("[%s]" % cmd)
-    sig.print_newline()
+    sig.print_paragraph("%s" % partner_node.upper())
     sig.print_paragraph(output)
 
 
@@ -249,7 +247,7 @@ def ssh_nmc(cmd, host, timeout=None):
     Outputs:
         None
     """
-    nmc = "nmc -c \"%s\"" % cmd
+    nmc = "nmc -c \\\"%s\\\"" % cmd
     ssh_nmc = "ssh %s \"%s\"" % (host, nmc)
     try:
         retcode, output = execute(ssh_nmc, timeout)
@@ -266,8 +264,7 @@ def ssh_nmc(cmd, host, timeout=None):
         if not ignore:
             sys.exit(1)
 
-    sig.print_string("[%s]" % nmc)
-    sig.print_newline()
+    sig.print_paragraph("%s" % partner_node.upper())
     sig.print_paragraph(output)
 
 
@@ -416,7 +413,7 @@ def hostname():
         log("ERROR", output)
         sys.exit(1)
 
-    return hostname
+    return hostname.strip()
 
 
 def rsf_partner():
@@ -429,9 +426,8 @@ def rsf_partner():
         partner (str): Partner hostname
     """
     rsfcli = "/opt/HAC/RSF-1/bin/rsfcli -i0"
-    hname = hostname()
-    partner = None
     hosts = []
+    partner = None
     name = None
 
     # First try to determine if the cluster is configured.
@@ -470,7 +466,7 @@ def rsf_partner():
 
     # Determine which clustered host is the partner
     for h in hosts:
-        if h != hname:
+        if h != this_node:
             partner = h
             log("INFO", "%s is partner node" % partner)
             break
@@ -540,14 +536,30 @@ def sections(section, level):
             # Handle command
             if "cmd" in subsection:
                 cmd = subsection["cmd"]
+
+                sig.print_paragraph("[%s]" % cmd)
+
                 if cmd is not None:
+                    # Execute on this node
                     execute_cmd(cmd)
+
+                    # Execute on remote node
+                    if partner_node is not None:
+                        ssh(cmd, partner_node)
 
             # Handle nmc
             if "nmc" in subsection:
                 nmc = subsection["nmc"]
+
+                sig.print_paragraph("[%s]" % nmc)
+
                 if nmc is not None:
+                    # Execute on this node
                     execute_nmc(nmc)
+
+                    # Execute on the remote node
+                    if partner_node is not None:
+                        ssh_nmc(nmc, partner_node)
 
         # Handle sections
         if "sections" in subsection:
@@ -559,6 +571,8 @@ def main():
     global sig
     global collector
     global ignore
+    global partner_node
+    global this_node
     config = "autosig.conf"
 
     # Define the command line arguments
@@ -608,14 +622,14 @@ def main():
             sys.exit(1)
 
     # Get hostnames initialize variables
-    partner = rsf_partner()
-    hname = hostname()
+    this_node= hostname()
+    partner_node = rsf_partner()
 
     # Open the output file
-    if partner is None:
-        f = "nexenta-autosig-%s.txt" % hname
+    if partner_node is None:
+        f = "nexenta-autosig-%s.txt" % this_node
     else:
-        f = "nexenta-autosig-%s-%s.txt" % (hname, partner)
+        f = "nexenta-autosig-%s-%s.txt" % (this_node, partner_node)
     sig = Document(f)
     log("INFO", "Writing output to %s" % f)
 
