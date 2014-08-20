@@ -470,7 +470,7 @@ def rsf_partner():
 
     # Determine which clustered host is the partner
     for h in hosts:
-        if h is not hname:
+        if h != hname:
             partner = h
             log("INFO", "%s is partner node" % partner)
             break
