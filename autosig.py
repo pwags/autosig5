@@ -119,10 +119,6 @@ def execute_collector(location, bundle, timeout=None):
     Outputs:
         None
     """
-    # allow null to ignore this for higher levels of the document tree
-    if not location:
-        return
-
     try:
         retcode, output = execute("cat %s/%s" % (bundle, location),
                                   timeout=timeout)
@@ -530,9 +526,10 @@ def sections(section, level):
             if "collector" in subsection:
                 location = subsection["collector"]
 
-                sig.print_paragraph("[%s]" % location)
-                for c in collector:
-                    execute_collector(location, c)
+                if location is not None:
+                    sig.print_paragraph("[%s]" % location)
+                    for c in collector:
+                        execute_collector(location, c)
             else:
                 log("WARN", "Collector generation specified but section "
                             "\"%s\" has no collector subsection" % title)
@@ -541,11 +538,10 @@ def sections(section, level):
             if "cmd" in subsection:
                 cmd = subsection["cmd"]
 
-                sig.print_paragraph("[%s]" % cmd)
                 if cmd is not None:
+                    sig.print_paragraph("[%s]" % cmd)
                     # Execute on this node
                     execute_cmd(cmd)
-
                     # Execute on remote node
                     if partner_node is not None:
                         ssh(cmd, partner_node)
@@ -554,12 +550,10 @@ def sections(section, level):
             if "nmc" in subsection:
                 nmc = subsection["nmc"]
 
-                sig.print_paragraph("[%s]" % nmc)
-
                 if nmc is not None:
+                    sig.print_paragraph("[%s]" % nmc)
                     # Execute on this node
                     execute_nmc(nmc)
-
                     # Execute on the remote node
                     if partner_node is not None:
                         ssh_nmc(nmc, partner_node)
