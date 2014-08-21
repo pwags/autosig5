@@ -20,11 +20,12 @@ import datetime
 
 # Define globals for convenience and to avoid complex passing
 version = "0.2"
-collector = None
+collector = []
 sig = None
 ignore = False
 partner_node = None
 this_node = None
+
 
 def usage():
     """
@@ -106,13 +107,14 @@ def execute(cmd, timeout=None):
     return retcode, output
 
 
-def execute_collector(location, timeout=None):
+def execute_collector(location, bundle, timeout=None):
     """
     Read data from collector as defined in the config file and write it to
     the SIG document.
 
     Inputs:
-        location (str): collector file to read
+        location (str): Relative path to collector file to read
+        bundle   (str): Absolute path to collector bundle
         timeout  (int): Command timeout in seconds
     Outputs:
         None
@@ -122,23 +124,22 @@ def execute_collector(location, timeout=None):
         return
 
     try:
-        retcode, output = execute("cat %s/%s" % (collector, location),
+        retcode, output = execute("cat %s/%s" % (bundle, location),
                                   timeout=timeout)
     except Exception, err:
-        log("ERROR", "could not read file \"%s/%s\"" % (collector, location))
+        log("ERROR", "could not read file \"%s/%s\"" % (bundle, location))
         log("ERROR", str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        log("ERROR", "collector read failed \"%s/%s\"" % (collector, location))
+        log("ERROR", "collector read failed \"%s/%s\"" % (bundle, location))
         log("ERROR", output)
         if not ignore:
             sys.exit(1)
 
-    sig.print_string("[%s/%s]" % (collector, location))
-    sig.print_newline()
+    sig.print_paragraph("%s" % "_".join(bundle.split("_")[1:-1]).upper())
     sig.print_paragraph(output)
 
 
@@ -525,12 +526,15 @@ def sections(section, level):
                 sig.print_paragraph(paragraph)
 
         # Handle collector fields: alternative to both cmd and nmc
-        if collector:
+        if len(collector) != 0:
             if "collector" in subsection:
                 location = subsection["collector"]
-                execute_collector(location, document)
+
+                sig.print_paragraph("[%s]" % location)
+                for c in collector:
+                    execute_collector(location, c)
             else:
-                log("WARN", "Collector generation specified but section " \
+                log("WARN", "Collector generation specified but section "
                             "\"%s\" has no collector subsection" % title)
         else:
             # Handle command
@@ -538,7 +542,6 @@ def sections(section, level):
                 cmd = subsection["cmd"]
 
                 sig.print_paragraph("[%s]" % cmd)
-
                 if cmd is not None:
                     # Execute on this node
                     execute_cmd(cmd)
@@ -592,7 +595,7 @@ def main():
         elif o in ("-c", "--config"):
             config = a
         elif o in ("-C", "--collector"):
-            collector = a
+            collector.append(a)
         elif o in ("-i", "--ignore"):
             ignore = True
 
@@ -616,20 +619,19 @@ def main():
         fh.close()
 
     # Test existence to prevent confusing errors downstream
-    if collector:
-        if not os.path.isdir(collector):
-            log("ERROR", "No collector directory '%s'" % collector)
-            sys.exit(1)
+    if len(collector) != 0:
+        for c in collector:
+            if not os.path.isdir(c):
+                log("ERROR", "No collector directory '%s'" % collector)
+                sys.exit(1)
 
     # Get hostnames initialize variables
-    this_node= hostname()
-    partner_node = rsf_partner()
+    if len(collector) == 0:
+        this_node = hostname()
+        partner_node = rsf_partner()
 
     # Open the output file
-    if partner_node is None:
-        f = "nexenta-autosig-%s.txt" % this_node
-    else:
-        f = "nexenta-autosig-%s-%s.txt" % (this_node, partner_node)
+    f = "nexenta-autosig.txt"
     sig = Document(f)
     log("INFO", "Writing output to %s" % f)
 
