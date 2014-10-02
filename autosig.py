@@ -95,7 +95,7 @@ def execute(cmd, timeout=None):
     except Exception, err:
         raise Execute(err)
     else:
-        # Possible race condition where alarm doesn't disabled in time
+        # Possible race condition where alarm isn't disabled in time
         signal.alarm(0)
 
     # stdout may be None and we need to acct for it
