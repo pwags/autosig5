@@ -634,6 +634,7 @@ def main():
 
     # Write collector bundle names
     if len(collector) != 0:
+        sig.print_newline()
         for c in collector:
             sig.print_string(c)
 
