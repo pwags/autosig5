@@ -19,7 +19,7 @@ import simplejson
 import datetime
 
 # Define globals for convenience and to avoid complex passing
-version = "0.2"
+version = "0.3"
 collector = []
 sig = None
 ignore = False
