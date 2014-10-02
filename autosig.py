@@ -632,6 +632,11 @@ def main():
     # Write the version number
     sig.print_string("Version %s" % version)
 
+    # Write collector bundle names
+    if len(collector) != 0:
+        for c in collector:
+            sig.print_string(c)
+
     # Iterate over the document sections
     level = 0
     sections([outline], level)
