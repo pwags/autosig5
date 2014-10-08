@@ -19,7 +19,7 @@ import simplejson
 import datetime
 
 # Define globals for convenience and to avoid complex passing
-version = "0.3"
+sig_version = "0.4"
 collector = []
 sig = None
 ignore = False
@@ -482,8 +482,8 @@ def sections(section, level):
         None
     """
     # Valid keys
-    valid = ["title", "enabled", "paragraph", "cmd", "nmc", "sections",
-             "collector"]
+    valid = ["_version", "title", "enabled", "paragraph", "cmd", "nmc",
+             "sections", "collector"]
     # Required keys
     required = ["title", "enabled"]
 
@@ -504,6 +504,13 @@ def sections(section, level):
         # Continue if the section is disabled
         if not subsection["enabled"]:
             continue
+
+        # Handle version number
+        # Should only be present in root of JSON file
+        if "_version" in subsection:
+            conf_version = subsection["_version"]
+            log("INFO", "Configuration v%s" % conf_version)
+            sig.print_string("Configuration v%s" % conf_version)
 
         # Handle title
         title = subsection["title"]
@@ -630,7 +637,8 @@ def main():
     log("INFO", "Writing output to %s" % f)
 
     # Write the version number
-    sig.print_string("Version %s" % version)
+    log("INFO", "Auto-SIG v%s" % sig_version)
+    sig.print_string("Auto-SIG v%s" % sig_version)
 
     # Write collector bundle names
     if len(collector) != 0:
