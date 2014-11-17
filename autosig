@@ -16,10 +16,10 @@ import subprocess
 import signal
 import getopt
 import simplejson
-import datetime
+import time
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.4"
+sig_version = "0.4.1"
 collector = []
 sig = None
 ignore = False
@@ -133,6 +133,7 @@ def execute_collector(location, bundle, timeout=None):
         log("ERROR", "collector read failed \"%s/%s\"" % (bundle, location))
         log("ERROR", output)
         if not ignore:
+            log("INFO", "The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % "_".join(bundle.split("_")[1:-1]).upper())
@@ -163,6 +164,7 @@ def execute_cmd(cmd, timeout=None):
         log("ERROR", "command execution failed \"%s\"" % cmd)
         log("ERROR", output)
         if not ignore:
+            log("INFO", "The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % this_node.upper())
@@ -194,6 +196,7 @@ def execute_nmc(cmd, timeout=None):
         log("ERROR", "NMC command execution failed \"%s\"" % cmd)
         log("ERROR", output)
         if not ignore:
+            log("INFO", "The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % this_node.upper())
@@ -226,6 +229,7 @@ def ssh(cmd, host, timeout=None):
         log("ERROR", "SSH command execution failed \"%s\"" % ssh_cmd)
         log("ERROR", output)
         if not ignore:
+            log("INFO", "The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % partner_node.upper())
@@ -259,6 +263,7 @@ def ssh_nmc(cmd, host, timeout=None):
         log("ERROR", "SSH NMC command execution failed \"%s\"" % ssh_nmc)
         log("ERROR", output)
         if not ignore:
+            log("INFO", "The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % partner_node.upper())
@@ -275,7 +280,8 @@ def log(severity, message):
     Outputs:
         None
     """
-    print " %s [%s] %s" % (str(datetime.datetime.now()), severity, message)
+    date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(1347517370))
+    print " %s [%s] %s" % (date, severity, message)
 
 
 class Document:
