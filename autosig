@@ -19,7 +19,7 @@ import simplejson
 import time
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.4.1"
+sig_version = "0.4.2"
 collector = []
 sig = None
 ignore = False
@@ -489,7 +489,7 @@ def sections(section, level):
     """
     # Valid keys
     valid = ["_version", "title", "enabled", "paragraph", "cmd", "nmc",
-             "sections", "collector"]
+             "sections", "collector", "ignore"]
     # Required keys
     required = ["title", "enabled"]
 
