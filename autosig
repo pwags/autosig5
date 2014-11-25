@@ -19,10 +19,10 @@ import simplejson
 import time
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.4.2"
+sig_version = "0.5"
 collector = []
 sig = None
-ignore = False
+global_ignore = False
 partner_node = None
 this_node = None
 
@@ -107,15 +107,16 @@ def execute(cmd, timeout=None):
     return retcode, output
 
 
-def execute_collector(location, bundle, timeout=None):
+def execute_collector(location, bundle, ignore, timeout=None):
     """
     Read data from collector as defined in the config file and write it to
     the SIG document.
 
     Inputs:
-        location (str): Relative path to collector file to read
-        bundle   (str): Absolute path to collector bundle
-        timeout  (int): Command timeout in seconds
+        location  (str): Relative path to collector file to read
+        bundle    (str): Absolute path to collector bundle
+        ignore   (bool): Ignore return code
+        timeout   (int): Command timeout in seconds
     Outputs:
         None
     """
@@ -140,13 +141,14 @@ def execute_collector(location, bundle, timeout=None):
     sig.print_paragraph(output)
 
 
-def execute_cmd(cmd, timeout=None):
+def execute_cmd(cmd, ignore, timeout=None):
     """
     Execute a command as defined in the config file and write it to the SIG
     document.
 
     Inputs:
         cmd     (str): Command to execute
+        ignore (bool): Ignore return code
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -171,13 +173,14 @@ def execute_cmd(cmd, timeout=None):
     sig.print_paragraph(output)
 
 
-def execute_nmc(cmd, timeout=None):
+def execute_nmc(cmd, ignore, timeout=None):
     """
     Execute an NMC command as defined in the config file and write it to the
     SIG document.
 
     Inputs:
         cmd     (str): NMC command to execute
+        ignore (bool): Ignore return code
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -203,7 +206,7 @@ def execute_nmc(cmd, timeout=None):
     sig.print_paragraph(output)
 
 
-def ssh(cmd, host, timeout=None):
+def ssh(cmd, host, ignore, timeout=None):
     """
     Execute a command on a remote host as defined in the config file and write
     it to the SIG document.
@@ -211,6 +214,7 @@ def ssh(cmd, host, timeout=None):
     Inputs:
         cmd     (str): Command to execute
         host    (str): Remote host
+        ignore (bool): Ignore return code
         timeout (int): Command timeout in seconds
     Output:
         None
@@ -236,7 +240,7 @@ def ssh(cmd, host, timeout=None):
     sig.print_paragraph(output)
 
 
-def ssh_nmc(cmd, host, timeout=None):
+def ssh_nmc(cmd, host, ignore, timeout=None):
     """
     Execute an NMC command on a remote host as defined in the config file
     and write it to the SIG document.
@@ -244,6 +248,7 @@ def ssh_nmc(cmd, host, timeout=None):
     Inputs:
         cmd     (str): NMC command to execute
         host    (str): Remote host
+        ignore (bool): Ignore return code
         timeout (int): Command timeout in seconds
     Outputs:
         None
@@ -534,6 +539,12 @@ def sections(section, level):
             if paragraph is not None:
                 sig.print_paragraph(paragraph)
 
+        # Check if ignore is defined
+        if "ignore" in subsection:
+            ignore = subsection["ignore"] or global_ignore
+        else:
+            ignore = global_ignore
+
         # Handle collector fields: alternative to both cmd and nmc
         if len(collector) != 0:
             if "collector" in subsection:
@@ -542,7 +553,7 @@ def sections(section, level):
                 if location is not None:
                     sig.print_paragraph("[%s]" % location)
                     for c in collector:
-                        execute_collector(location, c)
+                        execute_collector(location, c, ignore)
             else:
                 log("WARN", "Collector generation specified but section "
                             "\"%s\" has no collector subsection" % title)
@@ -554,7 +565,7 @@ def sections(section, level):
                 if cmd is not None:
                     sig.print_paragraph("[%s]" % cmd)
                     # Execute on this node
-                    execute_cmd(cmd)
+                    execute_cmd(cmd, ignore)
                     # Execute on remote node
                     if partner_node is not None:
                         ssh(cmd, partner_node)
@@ -566,7 +577,7 @@ def sections(section, level):
                 if nmc is not None:
                     sig.print_paragraph("[%s]" % nmc)
                     # Execute on this node
-                    execute_nmc(nmc)
+                    execute_nmc(nmc, ignore)
                     # Execute on the remote node
                     if partner_node is not None:
                         ssh_nmc(nmc, partner_node)
@@ -580,7 +591,7 @@ def main():
     # Initialize variables
     global sig
     global collector
-    global ignore
+    global global_ignore
     global partner_node
     global this_node
     config = "autosig.conf"
@@ -604,7 +615,7 @@ def main():
         elif o in ("-C", "--collector"):
             collector.append(a)
         elif o in ("-i", "--ignore"):
-            ignore = True
+            global_ignore = True
 
     # Open the configuration file
     try:
