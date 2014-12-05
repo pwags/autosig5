@@ -19,7 +19,7 @@ import simplejson
 import time
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.5"
+sig_version = "0.6"
 collector = []
 sig = None
 global_ignore = False
@@ -113,10 +113,10 @@ def execute_collector(location, bundle, ignore, timeout=None):
     the SIG document.
 
     Inputs:
-        location  (str): Relative path to collector file to read
-        bundle    (str): Absolute path to collector bundle
-        ignore   (bool): Ignore return code
-        timeout   (int): Command timeout in seconds
+        location (str): Relative path to collector file to read
+        bundle   (str): Absolute path to collector bundle
+        ignore  (bool): Ignore return code
+        timeout  (int): Command timeout in seconds
     Outputs:
         None
     """
@@ -317,7 +317,7 @@ class Document:
         Format and print title.
         e.g.
         =====
-        Title
+        TITLE
         =====
 
         Inputs:
@@ -541,6 +541,7 @@ def sections(section, level):
 
         # Check if ignore is defined
         if "ignore" in subsection:
+            logger("INFO", "Ignoring exit code")
             ignore = subsection["ignore"] or global_ignore
         else:
             ignore = global_ignore
@@ -568,7 +569,7 @@ def sections(section, level):
                     execute_cmd(cmd, ignore)
                     # Execute on remote node
                     if partner_node is not None:
-                        ssh(cmd, partner_node)
+                        ssh(cmd, partner_node, ignore)
 
             # Handle nmc
             if "nmc" in subsection:
@@ -580,7 +581,7 @@ def sections(section, level):
                     execute_nmc(nmc, ignore)
                     # Execute on the remote node
                     if partner_node is not None:
-                        ssh_nmc(nmc, partner_node)
+                        ssh_nmc(nmc, partner_node, ignore)
 
         # Handle sections
         if "sections" in subsection:
