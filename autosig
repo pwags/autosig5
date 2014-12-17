@@ -19,7 +19,7 @@ import simplejson
 import time
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.7"
+sig_version = "0.8"
 collector = []
 sig = None
 global_ignore = False
@@ -285,7 +285,7 @@ def log(severity, message):
     Outputs:
         None
     """
-    date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(1347517370))
+    date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     print " %s [%s] %s" % (date, severity, message)
 
 
