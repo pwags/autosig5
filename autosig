@@ -19,7 +19,7 @@ import simplejson
 import time
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.8"
+sig_version = "0.9"
 collector = []
 sig = None
 global_ignore = False
@@ -650,7 +650,10 @@ def main():
         partner_node = rsf_partner()
 
     # Open the output file
-    f = "nexenta-autosig.txt"
+    if partner_node:
+        f = "nexenta-autosig-%s-%s.txt" % (this_node, partner_node)
+    else:
+        f = "nexenta-autosig-%s.txt" % this_node
     sig = Document(f)
     log("INFO", "Writing output to %s" % f)
 
