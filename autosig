@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 
 # Define globals for convenience and to avoid complex passing
-version = "0.10"
+version = "0.11"
 collector = []
 sig = None
 global_ignore = False
@@ -388,6 +388,21 @@ class Document:
             self.fh.close()
 
 
+def collector_hostname(bundle):
+    """
+    Return hostname from collector bundle path.
+
+    Inputs:
+        bundle (str): Collector bundle path
+    Outputs:
+        hostname (str): Bundle hostname
+    """
+    bundle = os.path.basename(bundle.rstrip(os.path.sep))
+    hostname = "_".join(bundle.split("_")[1:-1])
+
+    return hostname
+
+
 def hostname():
     """
     Return the system hostname.
@@ -541,7 +556,7 @@ def sections(section, level):
                     for c in collector:
                         execute_collector(location, c, ignore)
             else:
-                log("WARN", "Collector generation specified but section "
+                logger.warn("Collector generation specified but section "
                             "\"%s\" has no collector subsection" % title)
         else:
             # Handle command
@@ -629,23 +644,22 @@ def main():
     finally:
         fh.close()
 
-    # Test existence to prevent confusing errors downstream
-    if len(collector) != 0:
+    if collector:
+        # Test existence to prevent confusing errors downstream
         for c in collector:
             if not os.path.isdir(c):
                 logger.error("No collector directory '%s'" % collector)
                 sys.exit(1)
 
-    # Get hostnames
-    if len(collector) == 0:
+        hosts = map(collector_hostname, collector)
+    else:
         this_node = hostname()
         partner_node = rsf_partner()
 
+        hosts = [x for x in [this_node, partner_node] if x is not None]
+
     # Open the output file
-    if partner_node:
-        f = "nexenta-autosig-%s-%s.txt" % (this_node, partner_node)
-    else:
-        f = "nexenta-autosig-%s.txt" % this_node
+    f = "nexenta-autosig-%s.txt" % "-".join(hosts)
     sig = Document(f)
     logger.info("Writing output to %s" % f)
 
