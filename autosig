@@ -17,9 +17,15 @@ import signal
 import getopt
 import simplejson
 import time
+import logging
+
+
+# Logger
+logger = logging.getLogger()
+
 
 # Define globals for convenience and to avoid complex passing
-sig_version = "0.9"
+version = "0.10"
 collector = []
 sig = None
 global_ignore = False
@@ -107,7 +113,7 @@ def execute(cmd, timeout=None):
     return retcode, output
 
 
-def execute_collector(location, bundle, ignore, timeout=None):
+def execute_collector(location, bundle, ignore):
     """
     Read data from collector as defined in the config file and write it to
     the SIG document.
@@ -120,21 +126,14 @@ def execute_collector(location, bundle, ignore, timeout=None):
     Outputs:
         None
     """
+    f = os.path.join(bundle, location)
     try:
-        retcode, output = execute("cat %s/%s" % (bundle, location),
-                                  timeout=timeout)
+        output = open(f, "r").read()
     except Exception, err:
-        log("ERROR", "could not read file \"%s/%s\"" % (bundle, location))
-        log("ERROR", str(err))
+        logger.error("Could not read file \"%s\"" % f)
+        logger.error(str(err))
         if not ignore:
-            sys.exit(1)
-
-    # Check the command return code
-    if retcode:
-        log("ERROR", "collector read failed \"%s/%s\"" % (bundle, location))
-        log("ERROR", output)
-        if not ignore:
-            log("INFO", "The '-i' option can be used to ignore errors")
+            logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % "_".join(bundle.split("_")[1:-1]).upper())
@@ -156,17 +155,17 @@ def execute_cmd(cmd, ignore, timeout=None):
     try:
         retcode, output = execute(cmd, timeout=timeout)
     except Exception, err:
-        log("ERROR", "command execution failed \"%s\"" % cmd)
-        log("ERROR", str(err))
+        logger.error("Command execution failed \"%s\"" % cmd)
+        logger.error(str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        log("ERROR", "command execution failed \"%s\"" % cmd)
-        log("ERROR", output)
+        logger.error("Command execution failed \"%s\"" % cmd)
+        logger.error(output)
         if not ignore:
-            log("INFO", "The '-i' option can be used to ignore errors")
+            logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % this_node.upper())
@@ -189,17 +188,17 @@ def execute_nmc(cmd, ignore, timeout=None):
     try:
         retcode, output = execute(nmc, timeout=timeout)
     except Exception, err:
-        log("ERROR", "NMC command execution failed \"%s\"" % cmd)
-        log("ERROR", str(err))
+        logger.error("NMC command execution failed \"%s\"" % cmd)
+        logger.error(str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        log("ERROR", "NMC command execution failed \"%s\"" % cmd)
-        log("ERROR", output)
+        logger.error("NMC command execution failed \"%s\"" % cmd)
+        logger.error(output)
         if not ignore:
-            log("INFO", "The '-i' option can be used to ignore errors")
+            logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % this_node.upper())
@@ -223,17 +222,17 @@ def ssh(cmd, host, ignore, timeout=None):
     try:
         retcode, output = execute(ssh_cmd, timeout)
     except Exception, err:
-        log("ERROR", "SSH command execution failed \"%s\"" % ssh_cmd)
-        log("ERROR", str(err))
+        logger.error("SSH command execution failed \"%s\"" % ssh_cmd)
+        logger.error(str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        log("ERROR", "SSH command execution failed \"%s\"" % ssh_cmd)
-        log("ERROR", output)
+        logger.error("SSH command execution failed \"%s\"" % ssh_cmd)
+        logger.error(output)
         if not ignore:
-            log("INFO", "The '-i' option can be used to ignore errors")
+            logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % partner_node.upper())
@@ -258,35 +257,21 @@ def ssh_nmc(cmd, host, ignore, timeout=None):
     try:
         retcode, output = execute(ssh_nmc, timeout)
     except Exception, err:
-        log("ERROR", "SSH NMC command execution failed \"%s\"" % ssh_nmc)
-        log("ERROR", str(err))
+        logger.error("SSH NMC command execution failed \"%s\"" % ssh_nmc)
+        logger.error(str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        log("ERROR", "SSH NMC command execution failed \"%s\"" % ssh_nmc)
-        log("ERROR", output)
+        logger.error("SSH NMC command execution failed \"%s\"" % ssh_nmc)
+        logger.error(output)
         if not ignore:
-            log("INFO", "The '-i' option can be used to ignore errors")
+            logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
     sig.print_paragraph("%s" % partner_node.upper())
     sig.print_paragraph(output)
-
-
-def log(severity, message):
-    """
-    Log a message to stdout.
-
-    Inputs:
-        severity (str): Severity string
-        message  (str): Log message
-    Outputs:
-        None
-    """
-    date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    print " %s [%s] %s" % (date, severity, message)
 
 
 class Document:
@@ -417,8 +402,8 @@ def hostname():
     else:
         retcode, hostname = execute("hostname")
     if retcode:
-        log("ERROR", "failed to get system hostname")
-        log("ERROR", output)
+        logger.error("failed to get system hostname")
+        logger.error(output)
         sys.exit(1)
 
     return hostname.strip()
@@ -446,16 +431,16 @@ def rsf_partner():
     try:
         retcode, output = execute("%s isrunning" % rsfcli)
     except Exception, err:
-        log("ERROR", "unable to determine RSF service state")
-        log("ERROR", output)
+        logger.error("unable to determine RSF service state")
+        logger.error(output)
         sys.exit(1)
 
     # Non-zero return code means service is not running
     if retcode:
-        log("INFO", "RSF service is not running")
+        logger.info("RSF service is not running")
         return partner
 
-    log("INFO", "RSF service is running")
+    logger.info("RSF service is running")
 
     # Parse the RSF status
     retcode, output = execute("/opt/HAC/RSF-1/bin/rsfcli status")
@@ -467,16 +452,16 @@ def rsf_partner():
 
     # Check for default 4.x configuration
     if name == "Ready_For_Cluster_Configuration":
-        log("INFO", "Cluster is not configured")
+        logger.info("Cluster is not configured")
         return partner
 
-    log("INFO", "RSF cluster is configured")
+    logger.info("RSF cluster is configured")
 
     # Determine which clustered host is the partner
     for h in hosts:
         if h != this_node:
             partner = h
-            log("INFO", "%s is partner node" % partner)
+            logger.info("%s is partner node" % partner)
             break
 
     return partner
@@ -503,13 +488,13 @@ def sections(section, level):
         # Verify required keys are present
         for key in required:
             if key not in subsection:
-                log("ERROR", "Required key \"%s\" missing" % key)
+                logger.error("Required key \"%s\" missing" % key)
                 sys.exit(1)
 
         # Verify there are no unsupported keys present
         for key in subsection:
             if key not in valid:
-                log("ERROR", "Invalid key \"%s\"" % key)
+                logger.error("Invalid key \"%s\"" % key)
                 sys.exit(1)
 
         # Continue if the section is disabled
@@ -520,12 +505,12 @@ def sections(section, level):
         # Should only be present in root of JSON file
         if "_version" in subsection:
             conf_version = subsection["_version"]
-            log("INFO", "Configuration v%s" % conf_version)
+            logger.info("Configuration v%s" % conf_version)
             sig.print_string("Configuration v%s" % conf_version)
 
         # Handle title
         title = subsection["title"]
-        log("INFO", "Section \"%s\"" % title)
+        logger.info("Section \"%s\"" % title)
         if level == 0:
             sig.print_title(title)
         elif level == 1:
@@ -541,7 +526,7 @@ def sections(section, level):
 
         # Check if ignore is defined
         if "ignore" in subsection:
-            log("INFO", "Ignoring exit code")
+            logger.info("Ignoring exit code")
             ignore = subsection["ignore"] or global_ignore
         else:
             ignore = global_ignore
@@ -590,6 +575,7 @@ def sections(section, level):
 
 def main():
     # Initialize variables
+    level = logging.INFO
     global sig
     global collector
     global global_ignore
@@ -599,16 +585,16 @@ def main():
 
     # Define the command line arguments
     try:
-        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:i",
-                                   ["help", "config=", "collector=", "ignore"])
+        opts, args = getopt.getopt(sys.argv[1:], ":hc:C:id",
+                                   ["config=", "collector=", "ignore"])
     except getopt.GetoptError, err:
-        log("ERROR", str(err))
+        logger.error(str(err))
         usage()
         sys.exit(2)
 
     # Parse the command line arguments
     for o, a in opts:
-        if o in ("-h", "--help"):
+        if o in ("-h"):
             usage()
             sys.exit()
         elif o in ("-c", "--config"):
@@ -617,13 +603,19 @@ def main():
             collector.append(a)
         elif o in ("-i", "--ignore"):
             global_ignore = True
+        elif o in ("-d"):
+            level = logging.DEBUG
+
+    # Logging config
+    logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s",
+                        level=level, datefmt='%Y-%m-%d %I:%M:%S')
 
     # Open the configuration file
     try:
         fh = open(config)
     except Exception, err:
-        log("ERROR", "Cannot open the config file")
-        log("ERROR", str(err))
+        logger.error("Cannot open the config file")
+        logger.error(str(err))
         sys.exit(1)
 
     # Parse the configuration file
@@ -631,8 +623,8 @@ def main():
         outline = simplejson.load(fh, encoding=None, cls=None,
                                   object_hook=None)
     except Exception, err:
-        log("ERROR", "Cannot parse the config file")
-        log("ERROR", str(err))
+        logger.error("Cannot parse the config file")
+        logger.error(str(err))
         sys.exit(1)
     finally:
         fh.close()
@@ -641,10 +633,10 @@ def main():
     if len(collector) != 0:
         for c in collector:
             if not os.path.isdir(c):
-                log("ERROR", "No collector directory '%s'" % collector)
+                logger.error("No collector directory '%s'" % collector)
                 sys.exit(1)
 
-    # Get hostnames initialize variables
+    # Get hostnames
     if len(collector) == 0:
         this_node = hostname()
         partner_node = rsf_partner()
@@ -655,11 +647,11 @@ def main():
     else:
         f = "nexenta-autosig-%s.txt" % this_node
     sig = Document(f)
-    log("INFO", "Writing output to %s" % f)
+    logger.info("Writing output to %s" % f)
 
     # Write the version number
-    log("INFO", "Auto-SIG v%s" % sig_version)
-    sig.print_string("Auto-SIG v%s" % sig_version)
+    logger.info("Auto-SIG v%s" % version)
+    sig.print_string("Auto-SIG v%s" % version)
 
     # Write collector bundle names
     if len(collector) != 0:
@@ -671,7 +663,7 @@ def main():
     level = 0
     sections([outline], level)
 
-    log("INFO", "Complete!")
+    logger.info("Complete!")
 
 
 if __name__ == "__main__":
