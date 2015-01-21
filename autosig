@@ -581,7 +581,7 @@ def main():
     global global_ignore
     global partner_node
     global this_node
-    config = "autosig.conf"
+    config = "autosig.json"
 
     # Define the command line arguments
     try:
@@ -614,7 +614,7 @@ def main():
     try:
         fh = open(config)
     except Exception, err:
-        logger.error("Cannot open the config file")
+        logger.error("Failed to open the config file")
         logger.error(str(err))
         sys.exit(1)
 
@@ -623,7 +623,7 @@ def main():
         outline = simplejson.load(fh, encoding=None, cls=None,
                                   object_hook=None)
     except Exception, err:
-        logger.error("Cannot parse the config file")
+        logger.error("Failed to parse the config file")
         logger.error(str(err))
         sys.exit(1)
     finally:
