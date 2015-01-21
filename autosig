@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 
 # Define globals for convenience and to avoid complex passing
-version = "0.11"
+version = "0.12"
 collector = []
 sig = None
 global_ignore = False
@@ -222,14 +222,14 @@ def ssh(cmd, host, ignore, timeout=None):
     try:
         retcode, output = execute(ssh_cmd, timeout)
     except Exception, err:
-        logger.error("SSH command execution failed \"%s\"" % ssh_cmd)
+        logger.error("SSH command execution failed \"%s\"" % cmd)
         logger.error(str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        logger.error("SSH command execution failed \"%s\"" % ssh_cmd)
+        logger.error("SSH command execution failed \"%s\"" % cmd)
         logger.error(output)
         if not ignore:
             logger.info("The '-i' option can be used to ignore errors")
@@ -257,14 +257,14 @@ def ssh_nmc(cmd, host, ignore, timeout=None):
     try:
         retcode, output = execute(ssh_nmc, timeout)
     except Exception, err:
-        logger.error("SSH NMC command execution failed \"%s\"" % ssh_nmc)
+        logger.error("SSH NMC command execution failed \"%s\"" % cmd)
         logger.error(str(err))
         if not ignore:
             sys.exit(1)
 
     # Check the command return code
     if retcode:
-        logger.error("SSH NMC command execution failed \"%s\"" % ssh_nmc)
+        logger.error("SSH NMC command execution failed \"%s\"" % cmd)
         logger.error(output)
         if not ignore:
             logger.info("The '-i' option can be used to ignore errors")
