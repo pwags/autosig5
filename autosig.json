@@ -1,5 +1,5 @@
 {
-    "_version": "0.8",
+    "_version": "0.9",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
     "paragraph": "Project: <project name>\nCustomer: <customer name>\nNexenta PS Case Number: <case number>\nNexenta Sales Order Number: <sales number>\nDate: <date>",
@@ -89,7 +89,7 @@
                 {
                     "enabled": true,
                     "title": "SSH Bindings",
-                    "paragraph": "NexetnaStor hosts can be SSH bound to enable clustering and auto* services.",
+                    "paragraph": "NexentaStor hosts can be SSH bound to enable clustering and auto* services.",
                     "nmc": "show network ssh-bindings",
                     "collector": "network/nmc-c-show-network-ssh-bindings.out",
                     "ignore": true
@@ -324,7 +324,7 @@
                 {
                     "enabled": true,
                     "title": "NEX-915",
-                    "paragraph": "SMART can cause interactions with FMD and unpredictable behavior.",
+                    "paragraph": "SMART can cause interactions with FMD, unpredictable behavior, and impact performance.",
                     "nmc": "show appliance runners"
                 },
                 {
