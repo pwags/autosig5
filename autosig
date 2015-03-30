@@ -136,7 +136,7 @@ def execute_collector(location, bundle, ignore):
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
-    sig.print_paragraph("%s" % "_".join(bundle.split("_")[1:-1]).upper())
+    sig.print_paragraph("%s" % collector_hostname(bundle).upper())
     sig.print_paragraph(output)
 
 
