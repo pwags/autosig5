@@ -345,16 +345,22 @@
                 {
                     "enabled": true,
                     "title": "Network Diagrams",
-                    "paragraph": null,
+                    "paragraph": "NA",
                     "collector": null
                 },
                 {
                     "enabled": true,
                     "title": "Storage Diagram",
-                    "paragraph": null,
+                    "paragraph": "NA",
                     "collector": null
                 }
             ]
+        },
+        {
+            "enabled": true,
+            "title": "Notes",
+            "paragraph": "NA",
+            "collector": null,
         },
         {
             "enabled": true,
