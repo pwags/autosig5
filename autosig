@@ -25,7 +25,8 @@ logger = logging.getLogger()
 
 
 # Define globals for convenience and to avoid complex passing
-version = "0.13"
+version = "0.14"
+output_d = "/var/tmp/go-live"
 collector = []
 sig = None
 global_ignore = False
@@ -621,6 +622,14 @@ def main():
         elif o in ("-d"):
             level = logging.DEBUG
 
+    # Create output directory
+    if not os.path.exists(output_d):
+        try:
+            os.mkdir(output_d)
+        except IOError, i:
+            print str(i)
+            sys.exit(1)
+
     # Logging config
     logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s",
                         level=level, datefmt='%Y-%m-%d %I:%M:%S')
@@ -659,9 +668,10 @@ def main():
         hosts = [x for x in [this_node, partner_node] if x is not None]
 
     # Open the output file
-    f = "nexenta-autosig-%s.txt" % "-".join(hosts)
-    sig = Document(f)
-    logger.info("Writing output to %s" % f)
+    output_f = "nexenta-autosig-%s.txt" % "-".join(hosts)
+    output = os.path.join(output_d, output_f)
+    sig = Document(output)
+    logger.info("Writing output to %s" % output)
 
     # Write the version number
     logger.info("Auto-SIG v%s" % version)
@@ -677,6 +687,7 @@ def main():
     level = 0
     sections([outline], level)
 
+    logger.info("Output written to %s" % output)
     logger.info("Complete!")
 
 
