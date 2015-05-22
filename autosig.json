@@ -1,5 +1,5 @@
 {
-    "_version": "0.9",
+    "_version": "0.10",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
     "paragraph": "Project: <project name>\nCustomer: <customer name>\nNexenta PS Case Number: <case number>\nNexenta Sales Order Number: <sales number>\nDate: <date>",
@@ -284,6 +284,65 @@
                     "paragraph": null,
                     "cmd": "zfs list",
                     "collector": "zfs/zfs-get-p-all.out"
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Services",
+            "paragraph": "File and block services.",
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "NFS",
+                    "paragraph": null,
+                    "cmd": "zfs get -t filesystem sharenfs | /usr/gnu/bin/grep -v -E ^syspool",
+                    "ignore": true
+                },
+                {
+                    "enabled": true,
+                    "title": "CIFS",
+                    "paragraph": null,
+                    "cmd": "zfs get -t filesystem sharesmb | /usr/gnu/bin/grep -v -E ^syspool",
+                    "ignore": true
+                },
+                {
+                    "enabled": true,
+                    "title": "Block",
+                    "paragraph": null,
+                    "cmd": null,
+                    "ignore": true,
+                    "sections": [
+                        {
+                            "enabled": true,
+                            "title": "Target",
+                            "paragraph": null,
+                            "cmd": "stmfadm list-target -v",
+                            "ignore": true
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Host Groups",
+                            "paragraph": null,
+                            "cmd": "stmfadm list-hg -v",
+                            "ignore": true
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Target Groups",
+                            "paragraph": null,
+                            "cmd": "stmfadm list-tg -v",
+                            "ignore": true
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Mappings",
+                            "paragraph": null,
+                            "cmd": "for lu in $(stmfadm list-lu | cut -d\" \" -f3); do echo \"\"; echo \"* $lu\"; echo \"\"; stmfadm list-view -l $lu; done",
+                            "ignore": true
+                        }
+                    ]
                 }
             ]
         },
