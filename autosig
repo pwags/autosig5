@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 
 # Define globals for convenience and to avoid complex passing
-version = "0.14"
+version = "0.15"
 output_d = "/var/tmp/go-live"
 collector = []
 sig = None
@@ -219,7 +219,7 @@ def ssh(cmd, host, ignore, timeout=None):
     Output:
         None
     """
-    ssh_cmd = "ssh %s \"%s\"" % (host, cmd)
+    ssh_cmd = "ssh %s '%s'" % (host, cmd)
     try:
         retcode, output = execute(ssh_cmd, timeout)
     except Exception, err:
@@ -253,8 +253,8 @@ def ssh_nmc(cmd, host, ignore, timeout=None):
     Outputs:
         None
     """
-    nmc = "nmc -c \\\"%s\\\"" % cmd
-    ssh_nmc = "ssh %s \"%s\"" % (host, nmc)
+    nmc = "nmc -c \"%s\"" % cmd
+    ssh_nmc = "ssh %s '%s'" % (host, nmc)
     try:
         retcode, output = execute(ssh_nmc, timeout)
     except Exception, err:
