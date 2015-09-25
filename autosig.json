@@ -376,22 +376,9 @@
             "sections": [
                 {
                     "enabled": true,
-                    "title": "NEX-1955",
-                    "paragraph": "The ival_anti_flapping property in the ses-check runner should be set to something other than zero in order to prevent false errors on shared JBODs when both nodes probe the JBOD at the same time.",
-                    "nmc": "show trigger ses-check property"
-                },
-                {
-                    "enabled": true,
                     "title": "NEX-915",
                     "paragraph": "SMART can cause interactions with FMD, unpredictable behavior, and impact performance.",
                     "nmc": "show appliance runners"
-                },
-                {
-                    "enabled": true,
-                    "title": "NEX-915 ctd.",
-                    "paragraph": "SMART can cause interactions with FMD and unpredictable behavior.",
-                    "nmc": "show lun smartstat",
-                    "ignore": true
                 }
             ]
         },
