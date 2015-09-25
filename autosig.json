@@ -1,5 +1,5 @@
 {
-    "_version": "0.10",
+    "_version": "0.11",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
     "paragraph": "Project: <project name>\nCustomer: <customer name>\nNexenta PS Case Number: <case number>\nDate: <date>",
