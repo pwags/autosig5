@@ -2,7 +2,7 @@
     "_version": "0.10",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
-    "paragraph": "Project: <project name>\nCustomer: <customer name>\nNexenta PS Case Number: <case number>\nNexenta Sales Order Number: <sales number>\nDate: <date>",
+    "paragraph": "Project: <project name>\nCustomer: <customer name>\nNexenta PS Case Number: <case number>\nDate: <date>",
     "cmd": null,
     "nmc": null,
     "collector": null,
