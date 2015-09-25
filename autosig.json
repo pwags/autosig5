@@ -403,7 +403,7 @@
             "sections": [
                 {
                     "enabled": true,
-                    "title": "Network Diagrams",
+                    "title": "Network Diagram",
                     "paragraph": "NA",
                     "collector": null
                 },
