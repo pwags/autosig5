@@ -397,6 +397,12 @@
         },
         {
             "enabled": true,
+            "title": "Bill of Materials",
+            "paragraph": "NA",
+            "collector": null
+        },
+        {
+            "enabled": true,
             "title": "Diagrams",
             "paragraph": null,
             "collector": null,
