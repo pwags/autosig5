@@ -2,7 +2,7 @@
     "_version": "0.11",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
-    "paragraph": "Project: <project name>\nCustomer: <customer name>\nNexenta PS Case Number: <case number>\nDate: <date>",
+    "paragraph": null,
     "cmd": null,
     "nmc": null,
     "collector": null,
@@ -16,25 +16,31 @@
         },
         {
             "enabled": true,
+            "title": "Project Details",
+            "paragraph": "Name: *Name*\n\nCustomer: *Customer*\n\nPS Case Number: *PS Case Number*\n\nDate: *Date*",
+            "sections": []
+        },
+        {
+            "enabled": true,
             "title": "Contact Information",
             "paragraph": null,
             "sections": [
                 {
                     "enabled": true,
                     "title": "Customer Contact Information",
-                    "paragraph": "Title: <title>\nName: <name>\nEmail: <email>\nPhone: <phone>",
+                    "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "collector": null
                 },
                 {
                     "enabled": true,
                     "title": "Partner Contact Information",
-                    "paragraph": "Title: <title>\nName: <name>\nEmail: <email>\nPhone: <phone>",
+                    "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "collector": null
                 },
                 {
                     "enabled": true,
                     "title": "Nexenta Contact Information",
-                    "paragraph": "Title: <title>\nName: <name>\nEmail: <email>\nPhone: <phone>",
+                    "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "collector": null
                 }
             ]
@@ -423,13 +429,13 @@
                 {
                     "enabled": true,
                     "title": "Nexenta Signature",
-                    "paragraph": "Name:\n\n\nDate:\n\n\nSignature:\n\n\n",
+                    "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "collector": null
                 },
                 {
                     "enabled": true,
                     "title": "Customer Signature",
-                    "paragraph": "Name:\n\n\nDate:\n\n\nSignature:\n\n\n",
+                    "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "collector": null
                 }
             ]
