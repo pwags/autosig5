@@ -10,7 +10,7 @@
         {
             "enabled": true,
             "title": "Overview",
-            "paragraph": "This report is designed to document the installation of a Nexenta appliance. It provides an as-delivered description of the appliance after installation, and as part of the Support Acceptance Checklist process it is required for moving into a supported state. An appliance is not considered to be under Nexenta Support until a signed version of this document has been attached to the 'Go-Live' case and the Support Acceptance Check (SAC) has been passed.",
+            "paragraph": "The System Implementation Guide (SIG) is designed to document the implementation details of a Nexenta deployment. A completed and signed SIG denotes the completion of the installation process and the Professional Services engagement. A signed SIG is a requirement of the \"Go-Live\" process which must be completed before a system is put into prodcution.",
             "collector": null,
             "sections": []
         },
