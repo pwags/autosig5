@@ -137,8 +137,8 @@ def execute_collector(location, bundle, ignore):
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
-    sig.print_paragraph("%s" % collector_hostname(bundle).upper())
-    sig.print_paragraph(output)
+    sig.print_hostname(collector_hostname(bundle))
+    sig.print_output(output)
 
 
 def execute_cmd(cmd, ignore, timeout=None):
@@ -169,8 +169,8 @@ def execute_cmd(cmd, ignore, timeout=None):
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
-    sig.print_paragraph("%s" % this_node.upper())
-    sig.print_paragraph(output)
+    sig.print_hostname(this_node)
+    sig.print_output(output)
 
 
 def execute_nmc(cmd, ignore, timeout=None):
@@ -202,8 +202,8 @@ def execute_nmc(cmd, ignore, timeout=None):
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
-    sig.print_paragraph("%s" % this_node.upper())
-    sig.print_paragraph(output)
+    sig.print_hostname(this_node)
+    sig.print_output(output)
 
 
 def ssh(cmd, host, ignore, timeout=None):
@@ -236,8 +236,8 @@ def ssh(cmd, host, ignore, timeout=None):
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
-    sig.print_paragraph("%s" % partner_node.upper())
-    sig.print_paragraph(output)
+    sig.print_hostname(partner_node)
+    sig.print_output(output)
 
 
 def ssh_nmc(cmd, host, ignore, timeout=None):
@@ -271,8 +271,8 @@ def ssh_nmc(cmd, host, ignore, timeout=None):
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
-    sig.print_paragraph("%s" % partner_node.upper())
-    sig.print_paragraph(output)
+    sig.print_hostname(partner_node)
+    sig.print_output(output)
 
 
 class Document:
@@ -301,10 +301,6 @@ class Document:
     def print_title(self, s):
         """
         Format and print title.
-        e.g.
-        =====
-        TITLE
-        =====
 
         Inputs:
             s (str): Title
@@ -312,17 +308,13 @@ class Document:
             None
         """
         self._write('\n')
-        self._write('%s\n' % ('=' * len(s)))
-        self._write('%s\n' % s.upper())
+        self._write('%s\n' % s)
         self._write('%s\n' % ('=' * len(s)))
         self._write('\n')
 
     def print_section(self, s):
         """
         Format and print section title.
-        e.g.
-        Section
-        -------
 
         Inputs:
             s (str): Section title
@@ -337,8 +329,6 @@ class Document:
     def print_sub_section(self, s, level=0):
         """
         Format and print sub-section title.
-        e.g.
-        [-]+ Sub-section
 
         Inputs:
             s (str): Sub-section title
@@ -347,7 +337,7 @@ class Document:
             None
         """
         self._write('\n')
-        self._write('%s+ %s\n' % ('-' * level, s))
+        self._write('%s### %s %s###\n' % ('#' * level, s, '#' * level))
         self._write('\n')
 
     def print_string(self, s):
@@ -361,6 +351,42 @@ class Document:
         """
         self._write('%s\n' % s)
 
+    def print_hostname(self, h):
+        """
+        Format and print a hostname.
+
+        Inputs:
+            h (str): Hostname
+        Outputs:
+            None
+        """
+        self._write('**%s**\n' % h)
+        self._write('\n')
+
+    def print_version(self, v):
+        """
+        Format and print a version string.
+
+        Inputs:
+            v (str): Version string
+        Outputs:
+            None
+        """
+        self._write('*%s*\n' % v)
+        self._write('\n')
+
+    def print_command(self, c):
+        """
+        Format and print a command string.
+
+        Inputs:
+            c (str): Command
+        Outputs:
+            None
+        """
+        self._write('[`%s`]\n' % c)
+        self._write('\n')
+
     def print_paragraph(self, p):
         """
         Format and print a paragraph.
@@ -370,7 +396,22 @@ class Document:
         Outputs:
             None
         """
-        self._write('%s\n\n' % p)
+        self._write('%s\n' % p)
+        self._write('\n')
+
+    def print_output(self, o):
+        """
+        Format and print command output.
+
+        Inputs:
+            o (str): Output
+        Outputs:
+            None
+        """
+        self._write('~~~\n')
+        self._write('%s\n' % o)
+        self._write('~~~\n')
+        self._write('\n')
 
     def print_newline(self):
         """
@@ -522,7 +563,7 @@ def sections(section, level):
         if "_version" in subsection:
             conf_version = subsection["_version"]
             logger.info("Configuration v%s" % conf_version)
-            sig.print_string("Configuration v%s" % conf_version)
+            sig.print_version("Configuration v%s" % conf_version)
 
         # Handle title
         title = subsection["title"]
@@ -553,7 +594,7 @@ def sections(section, level):
                 location = subsection["collector"]
 
                 if location is not None:
-                    sig.print_paragraph("[%s]" % location)
+                    sig.print_command(location)
                     for c in collector:
                         execute_collector(location, c, ignore)
             else:
@@ -565,7 +606,7 @@ def sections(section, level):
                 cmd = subsection["cmd"]
 
                 if cmd is not None:
-                    sig.print_paragraph("[%s]" % cmd)
+                    sig.print_command(cmd)
                     # Execute on this node
                     execute_cmd(cmd, ignore)
                     # Execute on remote node
@@ -577,7 +618,7 @@ def sections(section, level):
                 nmc = subsection["nmc"]
 
                 if nmc is not None:
-                    sig.print_paragraph("[%s]" % nmc)
+                    sig.print_command(nmc)
                     # Execute on this node
                     execute_nmc(nmc, ignore)
                     # Execute on the remote node
@@ -675,7 +716,7 @@ def main():
 
     # Write the version number
     logger.info("Auto-SIG v%s" % version)
-    sig.print_string("Auto-SIG v%s" % version)
+    sig.print_version("Auto-SIG v%s" % version)
 
     # Write collector bundle names
     if len(collector) != 0:
