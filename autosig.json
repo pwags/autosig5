@@ -10,7 +10,7 @@
         {
             "enabled": true,
             "title": "Overview",
-            "paragraph": "The System Implementation Guide (SIG) is designed to document the implementation details of a Nexenta deployment. A completed and signed SIG denotes the completion of the installation process and the Professional Services engagement. A signed SIG is a requirement of the \"Go-Live\" process which must be completed before a system is put into prodcution.",
+            "paragraph": "The System Implementation Guide (SIG) is designed to document the implementation details of a Nexenta deployment. A signed SIG is a requirement of the \"Go-Live\" process which must be completed before a system is put into production. A completed and signed SIG denotes the completion of the installation process and the Professional Services engagement.",
             "collector": null,
             "sections": []
         },
