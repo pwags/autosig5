@@ -1,5 +1,5 @@
 {
-    "_version": "0.12",
+    "_version": "0.14",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
     "paragraph": null,
@@ -262,6 +262,13 @@
                     "paragraph": "Domain configuration.",
                     "cmd": "smbadm list -v",
                     "collector": "cifs/smbadm-list-v.out"
+                },
+                {
+                    "enabled": true,
+                    "title": "LDAP",
+                    "paragraph": "LDAP configuration.",
+                    "cmd": "ldapclient list",
+                    "collector": null
                 }
             ]
         },
@@ -428,13 +435,19 @@
             "sections": [
                 {
                     "enabled": true,
-                    "title": "Nexenta Signature",
+                    "title": "Customer Signature",
                     "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "collector": null
                 },
                 {
                     "enabled": true,
-                    "title": "Customer Signature",
+                    "title": "Partner Signature",
+                    "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
+                    "collector": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Nexenta Signature",
                     "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "collector": null
                 }
