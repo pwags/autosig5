@@ -1,5 +1,5 @@
 {
-    "_version": "0.14",
+    "_version": "0.15",
     "title": "Nexenta System Implementation Guide (SIG)",
     "enabled": true,
     "paragraph": null,
@@ -268,7 +268,8 @@
                     "title": "LDAP",
                     "paragraph": "LDAP configuration.",
                     "cmd": "ldapclient list",
-                    "collector": null
+                    "collector": "nameservices/ldap_client_file",
+                    "ignore": true
                 }
             ]
         },
