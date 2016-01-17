@@ -16,9 +16,8 @@ import subprocess
 import signal
 import socket
 import getopt
-import simplejson
-import time
 import logging
+import simplejson
 
 
 # Logger
