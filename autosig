@@ -5,7 +5,7 @@ autosig.py
 
 Generates the System Implementation Guide.
 
-Copyright (c) 2014  Nexenta Systems
+Copyright (c) 2016  Nexenta Systems
 William Kettler <william.kettler@nexenta.com>
 Pete Hartman <pete.hartman@nexenta.com>
 """
