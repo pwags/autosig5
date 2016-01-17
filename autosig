@@ -14,6 +14,7 @@ import os
 import sys
 import subprocess
 import signal
+import socket
 import getopt
 import simplejson
 import time
@@ -430,19 +431,19 @@ class Document:
             self.fh.close()
 
 
-def collector_hostname(bundle):
+def collector_hostname(path):
     """
     Return hostname from collector bundle path.
 
     Inputs:
-        bundle (str): Collector bundle path
+        path (str): Collector bundle path
     Outputs:
         hostname (str): Bundle hostname
     """
-    bundle = os.path.basename(bundle.rstrip(os.path.sep))
-    hostname = "_".join(bundle.split("_")[1:-1])
+    path = os.path.basename(path.rstrip(os.path.sep))
+    hname = "_".join(bundle.split("_")[1:-1])
 
-    return hostname
+    return hname
 
 
 def hostname():
@@ -452,18 +453,16 @@ def hostname():
     Inputs:
         None
     Outputs:
-        hostname (str): System hostname
+        hname (str): System hostname
     """
-    if collector:
-        retcode, hostname = execute("cat %s/network/nodename" % collector)
-    else:
-        retcode, hostname = execute("hostname")
-    if retcode:
-        logger.error("failed to get system hostname")
-        logger.error(output)
+    try:
+        hname = socket.gethostname()
+    except Exception, exc:
+        logger.error("Unable to determine the system hostname")
+        logger.error(exc)
         sys.exit(1)
 
-    return hostname.strip()
+    return hname
 
 
 def rsf_partner():
