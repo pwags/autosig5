@@ -23,11 +23,10 @@ import simplejson
 # Logger
 logger = logging.getLogger()
 
-
 # Define globals for convenience and to avoid complex passing
 version = "0.16"
 output_d = "/var/tmp/go-live"
-collector = []
+collectors = []
 sig = None
 global_ignore = False
 partner_node = None
@@ -57,30 +56,58 @@ def usage():
     print "    -i, --ignore         ignore errors"
 
 
+class Signal(Exception):
+    """
+    This exception is raise by the signal handler.
+    """
+    pass
+
+
 class Timeout(Exception):
-    pass
+    """
+    This exception is raised when the command exceeds the defined timeout
+    duration and the command is killed.
+    """
+    def __init__(self, cmd, timeout):
+        self.cmd = cmd
+        self.timeout = timeout
+
+    def __str__(self):
+        return "Command '%s' timed out after %d second(s)." % \
+               (self.cmd, self.timeout)
 
 
-class Execute(Exception):
-    pass
+class Retcode(Exception):
+    """
+    This exception is raise when a command exits with a non-zero exit status.
+    """
+    def __init__(self, cmd, retcode, output=None):
+        self.cmd = cmd
+        self.retcode = retcode
+        self.output = output
+
+    def __str__(self):
+        return "Command '%s' returned non-zero exit status %d" % \
+               (self.cmd, self.retcode)
 
 
 def alarm_handler(signum, frame):
-    raise Timeout
+    raise Signal
 
 
 def execute(cmd, timeout=None):
     """
     Execute a command in the default shell. If a timeout is defined the command
-    will be killed if the timeout is exceeded.
+    will be killed if the timeout is exceeded and an exception will be raised.
 
     Inputs:
         cmd     (str): Command to execute
         timeout (int): Command timeout in seconds
     Outputs:
-        retcode  (int): Return code
-        output  (list): STDOUT/STDERR
+        output (str): STDOUT/STDERR
     """
+    logger.debug(cmd)
+
     # Define the timeout signal
     if timeout:
         signal.signal(signal.SIGALRM, alarm_handler)
@@ -93,25 +120,26 @@ def execute(cmd, timeout=None):
                                    stderr=subprocess.STDOUT)
 
         # Read the stdout/sterr buffers and retcode
-        stdout, stderr = phandle.communicate()
-        retcode = phandle.returncode
-    except Timeout, t:
+        output, _ = phandle.communicate()
+        retcode = phandle.poll()
+    except Signal:
         # Kill the running process
         phandle.kill()
-        raise Timeout("command timeout of %ds exceeded" % timeout)
-    except Exception, err:
-        raise Execute(err)
+        raise Timeout(cmd=cmd, timeout=timeout)
+    except:
+        logger.debug("Unhandled exception", exc_info=True)
+        raise
     else:
         # Possible race condition where alarm isn't disabled in time
         signal.alarm(0)
 
-    # stdout may be None and we need to acct for it
-    if stdout and stdout is not None:
-        output = stdout.strip()
-    else:
-        output = None
+    # Raise an exception if the command exited with non-zero exit status
+    if retcode:
+        raise Retcode(cmd, retcode, output=output)
 
-    return retcode, output
+    logger.debug(output)
+
+    return output
 
 
 def execute_collector(location, bundle, ignore):
@@ -128,12 +156,15 @@ def execute_collector(location, bundle, ignore):
         None
     """
     f = os.path.join(bundle, location)
+    exception = False
     try:
         output = open(f, "r").read()
     except Exception, err:
+        exception = True
         logger.error("Could not read file \"%s\"" % f)
-        logger.error(str(err))
-        if not ignore:
+        logger.error(err)
+    finally:
+        if exception and not ignore:
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
@@ -153,19 +184,25 @@ def execute_cmd(cmd, ignore, timeout=None):
     Outputs:
         None
     """
+    exception = False
     try:
-        retcode, output = execute(cmd, timeout=timeout)
-    except Exception, err:
-        logger.error("Command execution failed \"%s\"" % cmd)
-        logger.error(str(err))
-        if not ignore:
-            sys.exit(1)
-
-    # Check the command return code
-    if retcode:
-        logger.error("Command execution failed \"%s\"" % cmd)
+        output = execute(cmd, timeout=timeout)
+    except Timeout, tout:
+        exception = True
+        output = str(tout)
         logger.error(output)
-        if not ignore:
+    except Retcode, rcode:
+        exception = True
+        logger.error(rcode)
+        output = rcode.output
+        logger.debug(output)
+    except Exception, exc:
+        exception = True
+        output = None
+        logger.error("Command '%s' encountered an unknown exception" % cmd)
+        logger.debug(exc)
+    finally:
+        if exception and not ignore:
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
@@ -186,24 +223,7 @@ def execute_nmc(cmd, ignore, timeout=None):
         None
     """
     nmc = "nmc -c \"%s\"" % cmd
-    try:
-        retcode, output = execute(nmc, timeout=timeout)
-    except Exception, err:
-        logger.error("NMC command execution failed \"%s\"" % cmd)
-        logger.error(str(err))
-        if not ignore:
-            sys.exit(1)
-
-    # Check the command return code
-    if retcode:
-        logger.error("NMC command execution failed \"%s\"" % cmd)
-        logger.error(output)
-        if not ignore:
-            logger.info("The '-i' option can be used to ignore errors")
-            sys.exit(1)
-
-    sig.print_hostname(this_node)
-    sig.print_output(output)
+    execute_cmd(nmc, ignore, timeout)
 
 
 def ssh(cmd, host, ignore, timeout=None):
@@ -220,19 +240,25 @@ def ssh(cmd, host, ignore, timeout=None):
         None
     """
     ssh_cmd = "ssh %s '%s'" % (host, cmd)
+    exception = False
     try:
-        retcode, output = execute(ssh_cmd, timeout)
-    except Exception, err:
-        logger.error("SSH command execution failed \"%s\"" % cmd)
-        logger.error(str(err))
-        if not ignore:
-            sys.exit(1)
-
-    # Check the command return code
-    if retcode:
-        logger.error("SSH command execution failed \"%s\"" % cmd)
+        output = execute(ssh_cmd, timeout=timeout)
+    except Timeout, tout:
+        exception = True
+        output = str(tout)
         logger.error(output)
-        if not ignore:
+    except Retcode, rcode:
+        exception = True
+        logger.error(rcode)
+        output = str(rcode.output)
+        logger.debug(output)
+    except Exception, exc:
+        exception = True
+        output = None
+        logger.error("SSH command '%s' encountered an unknown exception" % cmd)
+        logger.debug(exc)
+    finally:
+        if exception and not ignore:
             logger.info("The '-i' option can be used to ignore errors")
             sys.exit(1)
 
@@ -254,32 +280,26 @@ def ssh_nmc(cmd, host, ignore, timeout=None):
         None
     """
     nmc = "nmc -c \"%s\"" % cmd
-    ssh_nmc = "ssh %s '%s'" % (host, nmc)
-    try:
-        retcode, output = execute(ssh_nmc, timeout)
-    except Exception, err:
-        logger.error("SSH NMC command execution failed \"%s\"" % cmd)
-        logger.error(str(err))
-        if not ignore:
-            sys.exit(1)
-
-    # Check the command return code
-    if retcode:
-        logger.error("SSH NMC command execution failed \"%s\"" % cmd)
-        logger.error(output)
-        if not ignore:
-            logger.info("The '-i' option can be used to ignore errors")
-            sys.exit(1)
-
-    sig.print_hostname(partner_node)
-    sig.print_output(output)
+    ssh(nmc, host, ignore, timeout)
 
 
-class Document:
+class Document():
+    """
+    Document formatting using Markdown language.
+    """
 
-    def __init__(self, f, stdout=False):
+    def __init__(self, fn, stdout=False):
+        """
+        Initialize the output file.
+
+        Inputs:
+            fn     (str): File name
+            stdout (bool): Pipe output to stdout
+        Outputs:
+            None
+        """
         self.stdout = stdout
-        self.fh = open(f, 'w')
+        self.fh = open(fn, 'w')
 
     def _write(self, s):
         """
@@ -426,7 +446,7 @@ class Document:
 
     def __exit__(self):
         # Close file
-        if fh is not sys.stdout:
+        if self.fh is not sys.stdout:
             self.fh.close()
 
 
@@ -484,26 +504,32 @@ def rsf_partner():
 
     # Make sure services are running
     try:
-        retcode, output = execute("%s isrunning" % rsfcli)
-    except Exception, err:
-        logger.error("unable to determine RSF service state")
-        logger.error(output)
-        sys.exit(1)
-
+        output = execute("%s isrunning" % rsfcli)
     # Non-zero return code means service is not running
-    if retcode:
+    except Retcode, rcode:
         logger.info("RSF service is not running")
         return partner
+    except Exception, exc:
+        logger.error("Unable to determine RSF service state")
+        logger.error(output)
+        logger.debug(exc)
+        sys.exit(1)
 
     logger.info("RSF service is running")
 
     # Parse the RSF status
-    retcode, output = execute("/opt/HAC/RSF-1/bin/rsfcli status")
-    for l in output.splitlines():
-        if l.startswith("Contacted"):
-            name = l.split()[4].rstrip(",").strip("\"")
-        elif l.startswith("Host"):
-            hosts.append(l.split()[1].strip())
+    try:
+        output = execute("/opt/HAC/RSF-1/bin/rsfcli status")
+    except Retcode, rcode:
+        logger.error("RSF configuration error")
+        logger.debug(rcode)
+        logger.debug(rcode.output)
+        sys.exit(1)
+    for line in output.splitlines():
+        if line.startswith("Contacted"):
+            name = line.split()[4].rstrip(",").strip("\"")
+        elif line.startswith("Host"):
+            hosts.append(line.split()[1].strip())
 
     # Check for default 4.x configuration
     if name == "Ready_For_Cluster_Configuration":
@@ -513,9 +539,9 @@ def rsf_partner():
     logger.info("RSF cluster is configured")
 
     # Determine which clustered host is the partner
-    for h in hosts:
-        if h != this_node:
-            partner = h
+    for host in hosts:
+        if host != this_node:
+            partner = host
             logger.info("%s is partner node" % partner)
             break
 
@@ -527,8 +553,8 @@ def sections(section, level):
     Iterate over a section.
 
     Inputs:
-        section
-        level
+        section (str): Current section key
+        level   (int): Current document level, i.e. Heading 1, 2, 3
     Outputs:
         None
     """
@@ -587,14 +613,14 @@ def sections(section, level):
             ignore = global_ignore
 
         # Handle collector fields: alternative to both cmd and nmc
-        if len(collector) != 0:
+        if len(collectors) != 0:
             if "collector" in subsection:
                 location = subsection["collector"]
 
                 if location is not None:
                     sig.print_command(location)
-                    for c in collector:
-                        execute_collector(location, c, ignore)
+                    for collector in collectors:
+                        execute_collector(location, collector, ignore)
             else:
                 logger.warn("Collector generation specified but section "
                             "\"%s\" has no collector subsection" % title)
@@ -632,7 +658,7 @@ def main():
     # Initialize variables
     level = logging.INFO
     global sig
-    global collector
+    global collectors
     global global_ignore
     global partner_node
     global this_node
@@ -642,23 +668,23 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], ":hc:C:id",
                                    ["config=", "collector=", "ignore"])
-    except getopt.GetoptError, err:
-        logger.error(str(err))
+    except getopt.GetoptError, exc:
+        logger.error(exc)
         usage()
         sys.exit(2)
 
     # Parse the command line arguments
     for o, a in opts:
-        if o in ("-h"):
+        if o in "-h":
             usage()
             sys.exit()
         elif o in ("-c", "--config"):
             config = a
         elif o in ("-C", "--collector"):
-            collector.append(a)
+            collectors.append(a)
         elif o in ("-i", "--ignore"):
             global_ignore = True
-        elif o in ("-d"):
+        elif o in "-d":
             level = logging.DEBUG
 
     # Create output directory
@@ -692,14 +718,14 @@ def main():
     finally:
         fh.close()
 
-    if collector:
+    if collectors:
         # Test existence to prevent confusing errors downstream
-        for c in collector:
-            if not os.path.isdir(c):
+        for collector in collectors:
+            if not os.path.isdir(collector):
                 logger.error("No collector directory '%s'" % collector)
                 sys.exit(1)
 
-        hosts = map(collector_hostname, collector)
+        hosts = map(collector_hostname, collectors)
     else:
         this_node = hostname()
         partner_node = rsf_partner()
@@ -717,10 +743,10 @@ def main():
     sig.print_version("Auto-SIG v%s" % version)
 
     # Write collector bundle names
-    if len(collector) != 0:
+    if len(collectors) != 0:
         sig.print_newline()
-        for c in collector:
-            sig.print_string(c)
+        for collector in collectors:
+            sig.print_string(collector)
 
     # Iterate over the document sections
     level = 0
