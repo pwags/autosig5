@@ -390,7 +390,7 @@
             "sections": [
                 {
                     "enabled": true,
-                    "title": "NEX-915",
+                    "title": "NEX-915 - Disable SMART",
                     "paragraph": "SMART can cause interactions with FMD, unpredictable behavior, and impact performance.",
                     "nmc": "show appliance runners"
                 }
