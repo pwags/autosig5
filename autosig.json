@@ -393,6 +393,13 @@
                     "title": "NEX-915 - Disable SMART",
                     "paragraph": "SMART can cause interactions with FMD, unpredictable behavior, and impact performance.",
                     "nmc": "show appliance runners"
+                },
+                {
+                    "enabled": true,
+                    "title": "NEX-6485 - Increase Swap Space",
+                    "paragraph": "Under certain workloads the default swap space configuration of 1GB may be too low and cause processes to become unresponsive.\n\n - Systems with 4GB of physical memory should have 1GB of swap space.\n - Systems with 8GB physical of memory should have 2GB of mmemory.\n - Systems with 16-128GB of physical memory should have 4GB of swap space.\n - Systems with >128GB of physical memory should have a swap space equivalent to 1/4 of physical memory size.",
+                    "cmd": "swap -l -h",
+                    "collector": "kernel/swap-l-h.out"
                 }
             ]
         },
