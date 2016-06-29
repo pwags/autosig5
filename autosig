@@ -24,7 +24,7 @@ import simplejson
 logger = logging.getLogger()
 
 # Define globals for convenience and to avoid complex passing
-version = "0.16"
+version = "0.17"
 output_d = "/var/tmp/go-live"
 collectors = []
 sig = None
