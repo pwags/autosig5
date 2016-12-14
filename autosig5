@@ -1,0 +1,696 @@
+#!/usr/bin/python3.4
+
+"""
+autosig5
+
+Generates the System Implementation Guide on NexentaStor 5.
+
+Copyright (c) 2016  Nexenta Systems
+William Kettler <william.kettler@nexenta.com>
+Pete Hartman <pete.hartman@nexenta.com>
+"""
+
+import os
+import sys
+import socket
+import getopt
+import logging
+import requests
+import pprint
+import json
+import getpass
+
+
+__version__ = "5.0.17"
+
+# Logger
+logger = logging.getLogger()
+
+
+def usage():
+    """
+    Print usage.
+    """
+    cmd = sys.argv[0]
+
+    print(cmd, "[-h] [-c CONFIG] [-C COLLECTORDIR] [-i]")
+    print("")
+    print("Nexenta Auto-SIG")
+    print("")
+    print("Arguments:")
+    print("")
+    print("    -h, --help           print usage")
+    print("    -c, --config         config file")
+
+
+class Document(object):
+    """
+    Document formatting using Markdown language.
+
+    Args:
+        fn (str): File name
+    Returns:
+        None
+    """
+
+    def __init__(self, fn):
+        self.fhandle = open(fn, 'w')
+
+    def _write(self, string):
+        """
+        Wrapper function for the write method.
+
+        Args:
+            string (str): String
+        Returns:
+            None
+        """
+        self.fhandle.write(string)
+        self.fhandle.flush()
+
+    def _pprint(self, obj):
+        """
+        Wrapper function for pprinting a dict/list to the document.
+
+        Args:
+            obj (dict|list): Python object of type dict/list
+        Returns:
+            None
+        """
+        pprint.pprint(obj, self.fhandle)
+        self.fhandle.flush()
+
+    def print_title(self, title):
+        """
+        Format and print title.
+
+        Args:
+            title (str): Title
+        Returns:
+            None
+        """
+        self._write('\n')
+        self._write('%s\n' % title)
+        self._write('%s\n' % ('=' * len(title)))
+        self._write('\n')
+
+    def print_section(self, title):
+        """
+        Format and print section title.
+
+        Args:
+            title (str): Section title
+        Returns:
+            None
+        """
+        self._write('\n')
+        self._write('%s\n' % title)
+        self._write('%s\n' % ('-' * len(title)))
+        self._write('\n')
+
+    def print_sub_section(self, title, level=0):
+        """
+        Format and print sub-section title.
+
+        Args:
+            title (str): Sub-section title
+            level (int): Sub-section level`
+        Returns:
+            None
+        """
+        self._write('\n')
+        self._write('%s### %s %s###\n' % ('#' * level, title, '#' * level))
+        self._write('\n')
+
+    def print_string(self, string):
+        """
+        Format and print a string.
+
+        Args:
+            string (str): String
+        Returns:
+            None
+        """
+        self._write('%s\n' % string)
+
+    def print_hostname(self, host):
+        """
+        Format and print a hostname.
+
+        Args:
+            host (str): Hostname
+        Returns:
+            None
+        """
+        self._write('**%s**\n' % host)
+        self._write('\n')
+
+    def print_version(self, vers):
+        """
+        Format and print a version string.
+
+        Args:
+            vers (str): Version string
+        Returns:
+            None
+        """
+        self._write('*%s*\n' % vers)
+        self._write('\n')
+
+    def print_command(self, cmd):
+        """
+        Format and print a command string.
+
+        Args:
+            cmd (str): Command
+        Returns:
+            None
+        """
+        self._write('[`%s`]\n' % cmd)
+        self._write('\n')
+
+    def print_paragraph(self, paragraph):
+        """
+        Format and print a paragraph.
+
+        Args:
+            paragraph (str): Paragraph
+        Returns:
+            None
+        """
+        self._write('%s\n' % paragraph)
+        self._write('\n')
+
+    def print_output(self, out):
+        """
+        Format and print command output.
+
+        Args:
+            out (str): Output
+        Returns:
+            None
+        """
+        self._write('~~~\n')
+        self._pprint(out)
+        self._write('~~~\n')
+        self._write('\n')
+
+    def print_newline(self):
+        """
+        Print newline.
+
+        Args:
+            None
+        Returns:
+            None
+        """
+        self._write('\n')
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Close file
+        if self.fhandle is not sys.stdout:
+            self.fhandle.close()
+
+
+class NEFClient(object):
+    """
+    NEF REST API client.
+
+    WARNING this class does not currently validate the SSL certificate.
+
+    Attributes:
+        host (str): Hostname or IP
+        port (int): Port
+        https (bool): Use https or http
+        url (str): The API url, i.e. http[s]://ip:port
+        username (str): Optional username, required if password provided
+        password (str): Optional password, required if username provided
+        key (str): The API authentication token
+        verify (bool): Verify the SSL certificat
+        headers (dict): The default request headers
+    """
+
+    def __init__(self, host, port=8443, https=True, username=None,
+                 password=None):
+        self.host = host
+        self.port = port
+        if https:
+            self.url = "https://%s:%s" % (host, str(self.port))
+        else:
+            self.url = "http://%s:%s" % (host, str(self.port))
+        self.username = username
+        self.password = password
+        self.key = None
+        self.verify = False
+        self.headers = {
+            "Content-Type": "application/json"
+        }
+
+        # Disable logging
+        #requests.packages.urllib3.disable_warnings()
+        logging.getLogger("requests").setLevel(logging.WARNING)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+
+        # Lets auth now so we can exit immediately if credentials are bad
+        if self.username is not None and self.password is not None:
+            self._login()
+        elif self.username is not None:
+            raise TypeError("A password is required when username is provided")
+        elif self.password is not None:
+            raise TypeError("A username is required when password is provided")
+
+    def _login(self):
+        """
+        Sends a login request.
+        """
+        method = "auth/login"
+        payload = {
+            "username": self.username,
+            "password": self.password
+        }
+
+        logger.debug("Logging in as user %s to %s", self.username, self.url)
+        try:
+            response = requests.post("/".join([self.url, method]),
+                                     data=payload, verify=self.verify)
+            response.raise_for_status()
+            body = response.json()
+        # Bookmark until I find out what error handling makes sense
+        except:
+            raise
+
+        logger.debug(body)
+
+        self.key = body["token"]
+        self.headers["Authorization"] = "Bearer %s" % self.key
+
+    def logout(self):
+        """
+        Sends logout request.
+        """
+        method = "auth/logout"
+        logger.debug("Logging out as user %s on %s", self.username, self.url)
+        self.post(method)
+
+    def get(self, method, params=None):
+        """
+        Sends a GET request.
+
+        Args:
+            method (str): NEF API method
+        Kwargs:
+            params (dict): Request parameters
+        Returns:
+            The HTML response body as a dict.
+        """
+        logger.debug("GET %s", method)
+        logger.debug(params)
+        try:
+            response = requests.get("/".join([self.url, method]),
+                                    headers=self.headers, verify=self.verify,
+                                    params=params)
+            response.raise_for_status()
+        # Bookmark until I find out what error handling makes sense
+        except:
+            raise
+
+        # If there is no response body json() will fail
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+
+        logger.debug(body)
+
+        return body
+
+    def post(self, method, payload=None):
+        """
+        Sends a POST request.
+
+        Args:
+            method (str): NEF API method
+        Kwargs:
+            payload (dict): Request payload
+        Returns:
+            The job ID if the request is ASYNC otherwise None.
+        """
+        logger.debug("POST %s", method)
+        logger.debug(payload)
+        try:
+            response = requests.post("/".join([self.url, method]),
+                                     headers=self.headers, verify=self.verify,
+                                     data=json.dumps(payload))
+            response.raise_for_status()
+        # Bookmark until I find out what error handling makes sense
+        except:
+            raise
+
+        # If there is no response body json() will fail
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+
+        # If the status code is 202 the request is in progress
+        if response.status_code == 202:
+            jobid = body["links"][0]["href"].split("/")[-1]
+        else:
+            jobid = None
+
+        logger.debug(body)
+
+        return jobid
+
+    def put(self, method, payload=None):
+        """
+        Sends a PUT request.
+
+        Args:
+            method (str): NEF API method
+        Kwargs:
+            payload (dict): Request payload
+        Returns:
+            The job ID if the request is ASYNC otherwise None.
+        """
+        logger.debug("PUT %s", method)
+        logger.debug(payload)
+        try:
+            response = requests.put("/".join([self.url, method]),
+                                    headers=self.headers, verify=self.verify,
+                                    data=json.dumps(payload))
+            response.raise_for_status()
+        # Bookmark until I find out what error handling makes sense
+        except:
+            raise
+
+        # If there is no response body json() will fail
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+
+        # If the status code is 202 the request is in progress
+        if response.status_code == 202:
+            jobid = body["links"][0]["href"].split("/")[-1]
+        else:
+            jobid = None
+
+        logger.debug(body)
+
+        return jobid
+
+    def delete(self, method, payload=None):
+        """
+        Sends a DELETE request.
+
+        Args:
+            method (str): NEF API method
+        Kwargs:
+            payload (dict): Request payload
+        Returns:
+            The job ID if the request is ASYNC otherwise None.
+        """
+        logger.debug("DELETE %s", method)
+        logger.debug(payload)
+        try:
+            response = requests.delete("/".join([self.url, method]),
+                                       headers=self.headers,
+                                       verify=self.verify,
+                                       data=json.dumps(payload))
+            response.raise_for_status()
+        # Bookmark until I find out what error handling makes sense
+        except:
+            raise
+
+        # If there is no response body json() will fail
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+
+        # If the status code is 202 the request is in progress
+        if response.status_code == 202:
+            jobid = body["links"][0]["href"].split("/")[-1]
+        else:
+            jobid = None
+
+        logger.debug(body)
+
+        return jobid
+
+    def jobstatus(self, jobid):
+        """
+        Determine the ASYNC job status.
+
+        Args:
+            jobid (str): The job ID returned by the ASYN request
+        Returns:
+            The job ID progress and state (i.e. done or not).
+        """
+        method = "jobStatus"
+        params = {
+            "jobId": jobid
+        }
+
+        body = self.get(method, params=params)
+        try:
+            progress = body["data"][0]["progress"]
+            done = body["data"][0]["done"]
+        except IndexError:
+            raise RuntimeError("The job ID no longer exists")
+
+        return done, progress
+
+
+def get_userpass(host):
+    """
+    Prompt for the API username and password.
+
+    Args:
+        host (str): The API host we are requesting creds for
+    Returns:
+        username (str): The API username
+        password (str): The API username
+    """
+    print("Please provide the username and password for %s:" % host)
+    username = input("User: ")
+    password = getpass.getpass()
+
+    return username, password
+
+
+def get_hostname():
+    """
+    Return the system hostname.
+
+    Returns:
+        System hostname
+    """
+    try:
+        hname = socket.gethostname()
+    except Exception as exc:
+        logger.error("Unable to determine the system hostname")
+        logger.error(exc)
+        sys.exit(1)
+
+    return hname
+
+
+def get_partner():
+    """
+    Return cluster partner hostname.
+
+    Returns:
+        Cluster partner hostname
+    """
+    method = "rsf/clusters"
+    params = {"fields": "nodes"}
+    partner = None
+    hostname = get_hostname()
+
+    nef = NEFClient("localhost", port=8080, https=False)
+    data = nef.get(method, params=params)["data"]
+    try:
+        # There should only be one cluster
+        hostnames = [n["machineName"] for n in data.pop()["nodes"]]
+    except IndexError:
+        logger.info("Cluster is not configured")
+        return partner
+
+    logger.info("Cluster is configured")
+    for host in hostnames:
+        if host != hostname:
+            partner = host
+    logger.info("%s is the cluster partner", partner)
+
+    return partner
+
+
+def validate_section(section):
+    """
+    Validate that the sections contains all the required objects.
+
+    Args:
+        section (dict): SIG section
+    """
+    # Check all required fields are present
+    required = ["enabled", "title", "paragraph", "method", "params",
+                "collector", "sections"]
+    if (len(set(required) & set(section.keys())) != len(required)):
+        logger.error("Section is missing required objects.")
+        logger.error(section)
+        sys.exit(1)
+
+
+def build_section(section, level, nodes, sig):
+    """
+    Retrive and print the section contents.
+
+    Args:
+        section (dict): Current section
+        level (int): Current document level, i.e. Heading 1, 2, 3
+        nodes (list): Cluster nodes
+        sig (Document): The SIG document class
+    """
+    validate_section(section)
+    enabled = section["enabled"]
+    title = section["title"]
+    paragraph = section["paragraph"]
+    method = section["method"]
+    params = section["params"]
+    sections = section["sections"]
+
+    # Continue if the section is disabled
+    if not enabled:
+        return
+
+    # Handle version number
+    # Should only be present in root of JSON file
+    if "_version" in section:
+        logger.info("Configuration v%s", section["_version"])
+        sig.print_version("Configuration v%s" % section["_version"])
+
+    # Handle title
+    logger.info("Section \"%s\"", title)
+    if level == 0:
+        sig.print_title(title)
+    elif level == 1:
+        sig.print_section(title)
+    else:
+        sig.print_sub_section(title, level-2)
+
+    # Handle paragraph
+    if paragraph is not None:
+        sig.print_paragraph(paragraph)
+
+    # Handle API call
+    if method is not None:
+        sig.print_command(method)
+        # Execute API call
+        for hostname, nef in nodes:
+            sig.print_hostname(hostname)
+            try:
+                output = nef.get(method, params=params)
+            except requests.exceptions.HTTPError as exc:
+                logger.error(str(exc))
+                sys.exit(1)
+            sig.print_output(output)
+
+    # Handle sections
+    if sections is not None:
+        for section in sections:
+            build_section(section, level+1, nodes, sig)
+
+
+def main():
+    """
+    Main loop.
+    """
+    # Initialize variables
+    dst = "/var/dropbox/"
+    config = "autosig5.json"
+    sig = None
+    nodes = []
+    level = logging.INFO
+
+    # Define the command line arguments
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:], ":hc:d", ["config="])
+    except getopt.GetoptError as exc:
+        logger.error(exc)
+        usage()
+        sys.exit(2)
+
+    # Parse the command line arguments
+    for opt, arg in opts:
+        if opt in "-h":
+            usage()
+            sys.exit()
+        elif opt in ("-c", "--config"):
+            config = arg
+        elif opt in "-d":
+            level = logging.DEBUG
+
+    # Logging config
+    logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s",
+                        level=level, datefmt='%Y-%m-%d %I:%M:%S')
+
+    # Create output directory
+    if not os.path.exists(dst):
+        try:
+            os.mkdir(dst)
+        except IOError as exc:
+            logger.error(str(exc))
+            sys.exit(1)
+
+    # Open the configuration file
+    try:
+        fhandle = open(config)
+    except IOError as i:
+        logger.error("Failed to open the config file '%s'", config)
+        logger.error(str(i))
+        sys.exit(1)
+
+    # Parse the configuration file
+    try:
+        outline = json.load(fhandle, encoding=None, cls=None)
+    except ValueError as v:
+        logger.error("Failed to parse the config file '%s'", config)
+        logger.error(str(v))
+        sys.exit(1)
+    finally:
+        fhandle.close()
+
+    # Get cluster nodes
+    nodes.append((get_hostname(), NEFClient("localhost", port=8080,
+                                            https=False)))
+    partner = get_partner()
+    if partner is not None:
+        username, password = get_userpass(partner)
+        nodes.append((partner, NEFClient(partner, username=username,
+                                         password=password)))
+
+    # Open the output file
+    fname = "nexenta-autosig-%s.txt" % "-".join([n[0] for n in nodes])
+    output = os.path.join(dst, fname)
+    sig = Document(output)
+    logger.info("Writing output to %s", output)
+
+    # Write the version number
+    logger.info("Auto-SIG v%s", __version__)
+    sig.print_version("Auto-SIG v%s" % __version__)
+
+    # Iterate over the document sections
+    build_section(outline, 0, nodes, sig)
+
+    logger.info("Output written to %s", output)
+    logger.info("Complete!")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.info("Killed by user")

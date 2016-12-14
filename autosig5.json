@@ -1,0 +1,616 @@
+{
+    "_version": "5.0.16",
+    "enabled": true,
+    "title": "Nexenta System Implementation Guide (SIG)",
+    "paragraph": null,
+    "method": null,
+    "params": null,
+    "collector": null,
+    "sections": [
+        {
+            "enabled": true,
+            "title": "Overview",
+            "paragraph": "The System Implementation Guide (SIG) is designed to document the implementation details of a Nexenta deployment. A signed SIG is a requirement of the \"Go-Live\" process which must be completed before a system is put into production. A completed and signed SIG denotes the completion of the installation process and the Professional Services engagement.",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": null
+        },
+        {
+            "enabled": true,
+            "title": "Project Details",
+            "paragraph": "Name: *Name*\n\nCustomer: *Customer*\n\nPS Case Number: *PS Case Number*\n\nDate: *Date*",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": null
+        },
+        {
+            "enabled": true,
+            "title": "Contact Information",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Customer Contact Information",
+                    "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Partner Contact Information",
+                    "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Nexenta Contact Information",
+                    "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Appliance",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "License",
+                    "paragraph": "The NexentaStor GUID is generated at installation and is unique for each appliance. Nexenta or Nexenta partners use the GUID to generate permanent license keys. Temporary license keys can be obtained from http://www.nexenta.com/register-trial. A system still using a temporary license will not pass the Support Acceptance Check (SAC) for production usage.\n\nMANUALLY ENTER KEYS HERE UNTIL SUPPORT IS ADDED TO THE API",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Versions",
+                    "paragraph": "Installed NexentaStor release.",
+                    "method": "software/packages",
+                    "params": {
+                        "fields": "name,product,version"
+                    },
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Services",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Mailer",
+                    "paragraph": "The appliance mailer is used to communicate failures and weekly status reports.",
+                    "method": "services/smtp",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "NTP",
+                    "paragraph": null,
+                    "method": "services/ntp",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Network",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Interfaces",
+                    "paragraph": "Physical network interfaces.",
+                    "method": "network/links",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Aggregates",
+                    "paragraph": "Network aggregates.",
+                    "method": "network/aggregations",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "IPMP",
+                    "paragraph": "IPMP groups.",
+                    "method": "network/ipmp",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "IP's",
+                    "paragraph": "IP addresses.",
+                    "method": "network/addresses",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "DNS",
+                    "paragraph": null,
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": [
+                        {
+                            "enabled": true,
+                            "title": "Name Servers",
+                            "paragraph": null,
+                            "method": "network/nameservers",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Hosts",
+                            "paragraph": null,
+                            "method": "network/hosts",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        }
+                    ]
+                },
+                {
+                    "enabled": true,
+                    "title": "Routing",
+                    "paragraph": null,
+                    "method": "network/routes",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": false,
+                    "title": "Upgrade Proxy",
+                    "paragraph": null,
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "ZFS",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Pools",
+                    "paragraph": null,
+                    "method": "storage/pools",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": false,
+                    "title": "Pool Design",
+                    "paragraph": null,
+                    "method": "storage/pools/{pools}/topology",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Filesystems",
+                    "paragraph": null,
+                    "method": "storage/filesystems",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Volumes",
+                    "paragraph": null,
+                    "method": "storage/volumes",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Sharing",
+            "paragraph": "File and block sharing services.",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "NFS",
+                    "paragraph": null,
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": [
+                        {
+                            "enabled": true,
+                            "title": "Exports",
+                            "paragraph": null,
+                            "method": "nas/nfs",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        },
+                        {
+                            "enabled": false,
+                            "title": "LDAP",
+                            "paragraph": "LDAP configuration.",
+                            "method": "ldapclient list",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        }
+                    ]
+                },
+                {
+                    "enabled": true,
+                    "title": "SMB",
+                    "paragraph": null,
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": [
+                        {
+                            "enabled": true,
+                            "title": "Shares",
+                            "paragraph": null,
+                            "method": "nas/smb",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Domain",
+                            "paragraph": "Domain configuration.",
+                            "method": "services/smb",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        }
+                    ]
+                },
+                {
+                    "enabled": true,
+                    "title": "Block",
+                    "paragraph": null,
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": [
+                        {
+                            "enabled": true,
+                            "title": "Targets",
+                            "paragraph": null,
+                            "method": null,
+                            "params": null,
+                            "collector": null,
+                            "sections": [
+                                {
+                                    "enabled": true,
+                                    "title": "iSCSI Targets",
+                                    "paragraph": null,
+                                    "method": "san/iscsi/targets",
+                                    "params": null,
+                                    "collector": null,
+                                    "sections": null
+                                },
+                                {
+                                    "enabled": true,
+                                    "title": "FC Targets",
+                                    "paragraph": null,
+                                    "method": "san/fibre/targets",
+                                    "params": null,
+                                    "collector": null,
+                                    "sections": null
+                                }
+                            ]
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Host Groups",
+                            "paragraph": null,
+                            "method": "san/hostgroups",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Target Groups",
+                            "paragraph": null,
+                            "method": "san/targetgroups",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        },
+                        {
+                            "enabled": true,
+                            "title": "Mappings",
+                            "paragraph": null,
+                            "method": "san/lunMappings",
+                            "params": null,
+                            "collector": null,
+                            "sections": null
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Cluster",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Configuration",
+                    "paragraph": "RSF-1 cluster configuration.",
+                    "method": "rsf/clusters",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": false,
+                    "title": "Services",
+                    "paragraph": "RSF-1 license and version information.",
+                    "method": "rsf/clusters/{clusters}/services",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Data Protection",
+            "paragraph": "NexentaStor supports High Performance Replication, snapshots and scrubs.",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Trusted Connections",
+                    "paragraph": "Trusted connections are required for data replication between appliances.",
+                    "method": "node/binding",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": false,
+                    "title": "High Performance Replication",
+                    "paragraph": "High Performance Replication (HPR) is a NexentaStor data and metadata replication and snapshot service which runs on a user defined schedule.",
+                    "method": "hpr/services/{hpr}",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": false,
+                    "title": "Scrub",
+                    "paragraph": "Scrub periodically performs volume cleaning method. It is based on the ZFS capability of using end-to-end checksums to detect data corruption",
+                    "method": "storage/pools/{pools}",
+                    "params": {
+                        "fields": "scrubSchedule"
+                    },
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Inventory",
+            "paragraph": "The system hardware inventory.",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "CPUs",
+                    "paragraph": null,
+                    "method": "inventory/cpus",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Disks",
+                    "paragraph": null,
+                    "method": "inventory/disks",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Enclosures",
+                    "paragraph": null,
+                    "method": "inventory/enclosures",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "HBAs",
+                    "paragraph": null,
+                    "method": "inventory/hbas",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Memory",
+                    "paragraph": null,
+                    "method": "inventory/memory",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "NICs",
+                    "paragraph": null,
+                    "method": "inventory/nics",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": false,
+                    "title": "Tape Devices",
+                    "paragraph": null,
+                    "method": "inventory/tapeDevices",
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Diagrams",
+            "paragraph": null,
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Network Diagram",
+                    "paragraph": "NA",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Storage Diagram",
+                    "paragraph": "NA",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        },
+        {
+            "enabled": true,
+            "title": "Custom",
+            "paragraph": "This sections documents any customer specific changes or release specific workarounds.",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": null
+        },
+        {
+            "enabled": true,
+            "title": "Notes",
+            "paragraph": "NA",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": null
+        },
+        {
+            "enabled": true,
+            "title": "Acceptance",
+            "paragraph": "I agree that the installation success criteria have been met.",
+            "method": null,
+            "params": null,
+            "collector": null,
+            "sections": [
+                {
+                    "enabled": true,
+                    "title": "Customer Signature",
+                    "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Partner Signature",
+                    "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Nexenta Signature",
+                    "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
+                    "method": null,
+                    "params": null,
+                    "collector": null,
+                    "sections": null
+                }
+            ]
+        }
+    ]
+}
