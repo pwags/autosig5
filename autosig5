@@ -157,6 +157,49 @@ class Document(object):
         self._write('*%s*\n' % vers)
         self._write('\n')
 
+    def print_table(self, table):
+        """
+        Format and print a table.
+
+        Args:
+            table (list): Table as a list of lists
+        Returns:
+            None
+        """
+        padding = []
+
+        # Get the max width of each column
+        for i in range(len(table[0])):
+            padding.append(max([len(row[i]) for row in table]))
+
+        # Print header
+        header = table.pop(0)
+        width = []
+        print("|", end=" ")
+        for i in range(len(header)):
+            width.append(len(header[i]))
+            col = header[i].ljust(padding[i])
+            print(col, end=" ")
+            print("|", end=" ")
+        print("")
+
+        # Print header delimiter
+        print("|", end="")
+        for pad in padding:
+            under = "-" * (pad + 2)
+            print(under, end="")
+            print("|", end="")
+        print("")
+
+        # Print table contents
+        for row in table:
+            print("|", end=" ")
+            for i in range(len(row)):
+                col = row[i].ljust(padding[i])
+                print(col, end=" ")
+                print("|", end=" ")
+            print("")
+
     def print_command(self, cmd):
         """
         Format and print a command string.
