@@ -175,30 +175,31 @@ class Document(object):
         # Print header
         header = table.pop(0)
         width = []
-        print("|", end=" ")
+        self._write("| ")
         for i in range(len(header)):
             width.append(len(header[i]))
             col = header[i].ljust(padding[i])
-            print(col, end=" ")
-            print("|", end=" ")
-        print("")
+            self._write(col)
+            self._write(" | ")
+        self.print_newline()
 
         # Print header delimiter
-        print("|", end="")
+        self._write("|")
         for pad in padding:
             under = "-" * (pad + 2)
-            print(under, end="")
-            print("|", end="")
-        print("")
+            self._write(under)
+            self._write("|")
+        self.print_newline()
 
         # Print table contents
         for row in table:
-            print("|", end=" ")
+            self._write("| ")
             for i in range(len(row)):
                 col = row[i].ljust(padding[i])
-                print(col, end=" ")
-                print("|", end=" ")
-            print("")
+                self._write(col)
+                self._write(" | ")
+            self.print_newline()
+        self.print_newline()
 
     def print_command(self, cmd):
         """
@@ -507,6 +508,183 @@ class NEFClient(object):
         return done, progress
 
 
+def format_collection(output, fields, sig):
+    """
+    Format an API collection as a table.
+
+    Args:
+        output
+        fields
+        sig
+    Returns:
+        None
+    """
+    ignore = ["links", "href", "flags"]
+    collection = output["data"]
+    table = []
+    headers = []
+
+    # Do not continue if the list is empty
+    if not collection:
+        return
+
+    for c in collection:
+        for i in ignore:
+            if i in c.keys():
+                c.pop(i)
+        if not headers:
+            if fields:
+                headers = fields
+            else:
+                headers = c.keys()
+            table.append([h.capitalize() for h in headers])
+        # Build the table
+        row = []
+        for h in headers:
+            row.append(str(c[h]))
+        table.append(row)
+
+    sig.print_table(table)
+
+
+def format_properties(output, fields, sig):
+    """
+    Format API properties as a table.
+
+    Args:
+        output
+        fields
+        sig
+    Returns:
+        None
+    """
+    ignore = ["links", "href", "flags"]
+    table = []
+    # Add generic table headers
+    table.append(["Name", "Value"])
+
+    # Remove all the keys we don't want to print
+    try:
+        for i in ignore:
+            output.pop(i)
+    except KeyError:
+        pass
+    # Build the table
+    if fields:
+        for f in fields:
+            table.append([f, str(output[f])])
+    else:
+        for k, v in output.items():
+            table.append([k, str(v)])
+
+    sig.print_table(table)
+
+
+def format_rsf(output, _, sig):
+    """
+    Format RSF config.
+
+    Args:
+        output
+        _
+        sig
+    Returns:
+        None
+    """
+    try:
+        data = output["data"][0]
+    except IndexError:
+        sig.print_string("None")
+        return
+    name = data["clusterName"]
+    description = data["description"]
+    nodes = data["nodes"]
+    heartbeats = data["networkHeartbeats"]
+    services = data["services"]
+
+    sig.print_string("Name: %s" % name)
+    sig.print_string("Description: %s" % description)
+    sig.print_newline()
+
+    sig.print_string("Cluster Configuration")
+    table = [["Name", "Enabled"]]
+    table.append(["Net Monitoring", str(data["networkMonitoringEnabled"])])
+    table.append(["FC Monitoring", str(data["fcMonitoringEnabled"])])
+    table.append(["Serial Monitoring", str(data["serialHeartbeatEnabled"])])
+    sig.print_table(table)
+
+    sig.print_string("Nodes")
+    table = [["Node", "Status", "Address", "Release"]]
+    for node in nodes:
+        row = []
+        row.append(node["machineName"])
+        row.append(node["nodeState"])
+        row.append(node["ipAddress"])
+        row.append(node["releaseName"])
+        table.append(row)
+    sig.print_table(table)
+
+    # The rsf/clusters endpoint is currently missing relevant info so this
+    # section is commented out
+    #sig.print_string("Heartbeats")
+    #table = [["Type", "From", "To", "Peer Address", "Status"]]
+    #for hb in heartbeats:
+    #    row = []
+    #    row.append("net")
+    #    row.append(hb["srcNode"])
+    #    row.append(hb["dstNode"])
+    #    row.append(hb["status"])
+    #sig.print_table(table)
+
+    sig.print_string("Services")
+    if services:
+        for service in services:
+            name = service["serviceName"]
+            status = service["status"]
+            table = [["Node", "Status"]]
+            sig.print_string(name)
+            for s in status:
+                table.append([s["node"], s["status"]])
+            sig.print_table(table)
+    else:
+        sig.print_string("None")
+
+
+def format_zpool(output, _, sig):
+    """
+    Format zpool config.
+
+    Args:
+        output
+        -
+        sig
+    Returns:
+        None
+    """
+    pool = output["poolName"]
+    health = output["health"]
+    vdevs = output["vdevTree"]["children"]
+    capacity = float(output["storageCapacity"])/1024**4
+
+    sig.print_string("Name: %s" % pool)
+    sig.print_string("Health: %s" % health)
+    sig.print_string("Capacity: %0.2fTB" % capacity)
+    # Print the vdev tree
+    sig.print_newline()
+    for vdev in vdevs:
+        name = vdev["vdevName"]
+        children = vdev["children"]
+        sig.print_string("%s" % name)
+        for child in children:
+            name = child["vdevName"]
+            state = child["diskState"]
+            model = child["diskModel"]
+            location = child["diskLocation"]
+            sig.print_string("\t%s\t%s\t%s\t%s" % (name, state, model,
+                                                   location))
+    sig.print_newline()
+
+
 def get_userpass(host):
     """
     Prompt for the API username and password.
@@ -579,12 +757,37 @@ def validate_section(section):
         section (dict): SIG section
     """
     # Check all required fields are present
-    required = ["enabled", "title", "paragraph", "method", "params",
-                "collector", "sections"]
+    required = ["enabled", "title", "paragraph", "method", "fields",
+                "collector", "sections", "formatter"]
     if (len(set(required) & set(section.keys())) != len(required)):
         logger.error("Section is missing required objects.")
         logger.error(section)
         sys.exit(1)
+
+
+def execute_api(nef, method, fields, formatcb, sig):
+    """
+    Execute the API request and format the response using the format callback.
+
+    Args:
+        nef
+        method
+        fields
+        formatcb
+        sig
+    Returns:
+        None
+    """
+    if fields is not None:
+        params = {"fields": ",".join(fields)}
+    else:
+        params = None
+    try:
+        output = nef.get(method, params=params)
+    except requests.exceptions.HTTPError as exc:
+        logger.error(str(exc))
+        sys.exit(1)
+    formatcb(output, fields, sig)
 
 
 def build_section(section, level, nodes, sig):
@@ -602,8 +805,9 @@ def build_section(section, level, nodes, sig):
     title = section["title"]
     paragraph = section["paragraph"]
     method = section["method"]
-    params = section["params"]
+    fields = section["fields"]
     sections = section["sections"]
+    formatter = section["formatter"]
 
     # Continue if the section is disabled
     if not enabled:
@@ -631,15 +835,15 @@ def build_section(section, level, nodes, sig):
     # Handle API call
     if method is not None:
         sig.print_command(method)
+        try:
+            formatcb = globals()["_".join(["format", formatter])]
+        except KeyError:
+            logger.error("Invalid formatter %s", formatter)
+            sys.exit(1)
         # Execute API call
         for hostname, nef in nodes:
             sig.print_hostname(hostname)
-            try:
-                output = nef.get(method, params=params)
-            except requests.exceptions.HTTPError as exc:
-                logger.error(str(exc))
-                sys.exit(1)
-            sig.print_output(output)
+            execute_api(nef, method, fields, formatcb, sig)
 
     # Handle sections
     if sections is not None:

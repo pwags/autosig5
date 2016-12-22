@@ -4,7 +4,8 @@
     "title": "Nexenta System Implementation Guide (SIG)",
     "paragraph": null,
     "method": null,
-    "params": null,
+    "fields": null,
+    "formatter": null,
     "collector": null,
     "sections": [
         {
@@ -12,7 +13,8 @@
             "title": "Overview",
             "paragraph": "The System Implementation Guide (SIG) is designed to document the implementation details of a Nexenta deployment. A signed SIG is a requirement of the \"Go-Live\" process which must be completed before a system is put into production. A completed and signed SIG denotes the completion of the installation process and the Professional Services engagement.",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": null
         },
@@ -21,42 +23,47 @@
             "title": "Project Details",
             "paragraph": "Name: *Name*\n\nCustomer: *Customer*\n\nPS Case Number: *PS Case Number*\n\nDate: *Date*",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": null
         },
         {
             "enabled": true,
-            "title": "Contact Information",
+            "title": "Contact Informatterion",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
                     "enabled": true,
-                    "title": "Customer Contact Information",
+                    "title": "Customer Contact Informatterion",
                     "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 },
                 {
                     "enabled": true,
-                    "title": "Partner Contact Information",
+                    "title": "Partner Contact Informatterion",
                     "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 },
                 {
                     "enabled": true,
-                    "title": "Nexenta Contact Information",
+                    "title": "Nexenta Contact Informatterion",
                     "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 }
@@ -67,7 +74,8 @@
             "title": "Appliance",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -75,7 +83,8 @@
                     "title": "License",
                     "paragraph": "The NexentaStor GUID is generated at installation and is unique for each appliance. Nexenta or Nexenta partners use the GUID to generate permanent license keys. Temporary license keys can be obtained from http://www.nexenta.com/register-trial. A system still using a temporary license will not pass the Support Acceptance Check (SAC) for production usage.\n\nMANUALLY ENTER KEYS HERE UNTIL SUPPORT IS ADDED TO THE API",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 },
@@ -84,9 +93,8 @@
                     "title": "Versions",
                     "paragraph": "Installed NexentaStor release.",
                     "method": "software/packages",
-                    "params": {
-                        "fields": "name,product,version"
-                    },
+                    "fields": ["product", "name", "version"],
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 }
@@ -97,7 +105,8 @@
             "title": "Services",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -105,7 +114,8 @@
                     "title": "Mailer",
                     "paragraph": "The appliance mailer is used to communicate failures and weekly status reports.",
                     "method": "services/smtp",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "properties",
                     "collector": null,
                     "sections": null
                 },
@@ -114,7 +124,8 @@
                     "title": "NTP",
                     "paragraph": null,
                     "method": "services/ntp",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "properties",
                     "collector": null,
                     "sections": null
                 }
@@ -125,7 +136,8 @@
             "title": "Network",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -133,7 +145,8 @@
                     "title": "Interfaces",
                     "paragraph": "Physical network interfaces.",
                     "method": "network/links",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -142,7 +155,8 @@
                     "title": "Aggregates",
                     "paragraph": "Network aggregates.",
                     "method": "network/aggregations",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -151,7 +165,8 @@
                     "title": "IPMP",
                     "paragraph": "IPMP groups.",
                     "method": "network/ipmp",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -160,7 +175,8 @@
                     "title": "IP's",
                     "paragraph": "IP addresses.",
                     "method": "network/addresses",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -169,7 +185,8 @@
                     "title": "DNS",
                     "paragraph": null,
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": [
                         {
@@ -177,7 +194,8 @@
                             "title": "Name Servers",
                             "paragraph": null,
                             "method": "network/nameservers",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "collection",
                             "collector": null,
                             "sections": null
                         },
@@ -186,7 +204,8 @@
                             "title": "Hosts",
                             "paragraph": null,
                             "method": "network/hosts",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "collection",
                             "collector": null,
                             "sections": null
                         }
@@ -197,7 +216,8 @@
                     "title": "Routing",
                     "paragraph": null,
                     "method": "network/routes",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -206,7 +226,8 @@
                     "title": "Upgrade Proxy",
                     "paragraph": null,
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 }
@@ -217,7 +238,8 @@
             "title": "ZFS",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -225,7 +247,8 @@
                     "title": "Pools",
                     "paragraph": null,
                     "method": "storage/pools",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -234,7 +257,8 @@
                     "title": "Pool Design",
                     "paragraph": null,
                     "method": "storage/pools/{pools}/topology",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "zpool",
                     "collector": null,
                     "sections": null
                 },
@@ -243,7 +267,8 @@
                     "title": "Filesystems",
                     "paragraph": null,
                     "method": "storage/filesystems",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -252,7 +277,8 @@
                     "title": "Volumes",
                     "paragraph": null,
                     "method": "storage/volumes",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 }
@@ -263,7 +289,8 @@
             "title": "Sharing",
             "paragraph": "File and block sharing services.",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -271,7 +298,8 @@
                     "title": "NFS",
                     "paragraph": null,
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": [
                         {
@@ -279,16 +307,18 @@
                             "title": "Exports",
                             "paragraph": null,
                             "method": "nas/nfs",
-                            "params": null,
+                            "fields": null,
                             "collector": null,
+                            "formatter": "collection",
                             "sections": null
                         },
                         {
                             "enabled": false,
                             "title": "LDAP",
                             "paragraph": "LDAP configuration.",
-                            "method": "ldapclient list",
-                            "params": null,
+                            "method": null,
+                            "fields": null,
+                            "formatter": null,
                             "collector": null,
                             "sections": null
                         }
@@ -298,8 +328,9 @@
                     "enabled": true,
                     "title": "SMB",
                     "paragraph": null,
+                    "formatter": null,
                     "method": null,
-                    "params": null,
+                    "fields": null,
                     "collector": null,
                     "sections": [
                         {
@@ -307,7 +338,8 @@
                             "title": "Shares",
                             "paragraph": null,
                             "method": "nas/smb",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "collection",
                             "collector": null,
                             "sections": null
                         },
@@ -316,7 +348,8 @@
                             "title": "Domain",
                             "paragraph": "Domain configuration.",
                             "method": "services/smb",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "properties",
                             "collector": null,
                             "sections": null
                         }
@@ -327,7 +360,8 @@
                     "title": "Block",
                     "paragraph": null,
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": [
                         {
@@ -335,7 +369,8 @@
                             "title": "Targets",
                             "paragraph": null,
                             "method": null,
-                            "params": null,
+                            "fields": null,
+                            "formatter": null,
                             "collector": null,
                             "sections": [
                                 {
@@ -343,7 +378,8 @@
                                     "title": "iSCSI Targets",
                                     "paragraph": null,
                                     "method": "san/iscsi/targets",
-                                    "params": null,
+                                    "fields": null,
+                                    "formatter": "collection",
                                     "collector": null,
                                     "sections": null
                                 },
@@ -352,7 +388,8 @@
                                     "title": "FC Targets",
                                     "paragraph": null,
                                     "method": "san/fibre/targets",
-                                    "params": null,
+                                    "fields": null,
+                                    "formatter": "collection",
                                     "collector": null,
                                     "sections": null
                                 }
@@ -363,7 +400,8 @@
                             "title": "Host Groups",
                             "paragraph": null,
                             "method": "san/hostgroups",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "collection",
                             "collector": null,
                             "sections": null
                         },
@@ -372,7 +410,8 @@
                             "title": "Target Groups",
                             "paragraph": null,
                             "method": "san/targetgroups",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "collection",
                             "collector": null,
                             "sections": null
                         },
@@ -381,7 +420,8 @@
                             "title": "Mappings",
                             "paragraph": null,
                             "method": "san/lunMappings",
-                            "params": null,
+                            "fields": null,
+                            "formatter": "collection",
                             "collector": null,
                             "sections": null
                         }
@@ -394,7 +434,8 @@
             "title": "Cluster",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -402,16 +443,8 @@
                     "title": "Configuration",
                     "paragraph": "RSF-1 cluster configuration.",
                     "method": "rsf/clusters",
-                    "params": null,
-                    "collector": null,
-                    "sections": null
-                },
-                {
-                    "enabled": false,
-                    "title": "Services",
-                    "paragraph": "RSF-1 license and version information.",
-                    "method": "rsf/clusters/{clusters}/services",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "rsf",
                     "collector": null,
                     "sections": null
                 }
@@ -422,7 +455,8 @@
             "title": "Data Protection",
             "paragraph": "NexentaStor supports High Performance Replication, snapshots and scrubs.",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -430,7 +464,8 @@
                     "title": "Trusted Connections",
                     "paragraph": "Trusted connections are required for data replication between appliances.",
                     "method": "node/binding",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "properties",
                     "collector": null,
                     "sections": null
                 },
@@ -439,7 +474,8 @@
                     "title": "High Performance Replication",
                     "paragraph": "High Performance Replication (HPR) is a NexentaStor data and metadata replication and snapshot service which runs on a user defined schedule.",
                     "method": "hpr/services/{hpr}",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -448,9 +484,8 @@
                     "title": "Scrub",
                     "paragraph": "Scrub periodically performs volume cleaning method. It is based on the ZFS capability of using end-to-end checksums to detect data corruption",
                     "method": "storage/pools/{pools}",
-                    "params": {
-                        "fields": "scrubSchedule"
-                    },
+                    "fields": ["scrubSchedule"],
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 }
@@ -461,7 +496,8 @@
             "title": "Inventory",
             "paragraph": "The system hardware inventory.",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -469,7 +505,8 @@
                     "title": "CPUs",
                     "paragraph": null,
                     "method": "inventory/cpus",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -478,7 +515,8 @@
                     "title": "Disks",
                     "paragraph": null,
                     "method": "inventory/disks",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -487,7 +525,8 @@
                     "title": "Enclosures",
                     "paragraph": null,
                     "method": "inventory/enclosures",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -496,7 +535,8 @@
                     "title": "HBAs",
                     "paragraph": null,
                     "method": "inventory/hbas",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -505,7 +545,8 @@
                     "title": "Memory",
                     "paragraph": null,
                     "method": "inventory/memory",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "properties",
                     "collector": null,
                     "sections": null
                 },
@@ -514,7 +555,8 @@
                     "title": "NICs",
                     "paragraph": null,
                     "method": "inventory/nics",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
@@ -523,7 +565,8 @@
                     "title": "Tape Devices",
                     "paragraph": null,
                     "method": "inventory/tapeDevices",
-                    "params": null,
+                    "fields": null,
+                    "formatter": "collection",
                     "collector": null,
                     "sections": null
                 }
@@ -534,7 +577,8 @@
             "title": "Diagrams",
             "paragraph": null,
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -542,7 +586,8 @@
                     "title": "Network Diagram",
                     "paragraph": "NA",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 },
@@ -551,7 +596,8 @@
                     "title": "Storage Diagram",
                     "paragraph": "NA",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 }
@@ -562,7 +608,8 @@
             "title": "Custom",
             "paragraph": "This sections documents any customer specific changes or release specific workarounds.",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": null
         },
@@ -571,7 +618,8 @@
             "title": "Notes",
             "paragraph": "NA",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": null
         },
@@ -580,7 +628,8 @@
             "title": "Acceptance",
             "paragraph": "I agree that the installation success criteria have been met.",
             "method": null,
-            "params": null,
+            "fields": null,
+            "formatter": null,
             "collector": null,
             "sections": [
                 {
@@ -588,7 +637,8 @@
                     "title": "Customer Signature",
                     "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 },
@@ -597,7 +647,8 @@
                     "title": "Partner Signature",
                     "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 },
@@ -606,7 +657,8 @@
                     "title": "Nexenta Signature",
                     "paragraph": "Name:\n\nDate:\n\nSignature:\n\n",
                     "method": null,
-                    "params": null,
+                    "fields": null,
+                    "formatter": null,
                     "collector": null,
                     "sections": null
                 }
