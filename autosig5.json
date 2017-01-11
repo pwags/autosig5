@@ -1,5 +1,5 @@
 {
-    "_version": "5.0.16",
+    "_version": "5.0.17",
     "enabled": true,
     "title": "Nexenta System Implementation Guide (SIG)",
     "paragraph": null,
@@ -30,7 +30,7 @@
         },
         {
             "enabled": true,
-            "title": "Contact Informatterion",
+            "title": "Contact Information",
             "paragraph": null,
             "method": null,
             "fields": null,
@@ -39,7 +39,7 @@
             "sections": [
                 {
                     "enabled": true,
-                    "title": "Customer Contact Informatterion",
+                    "title": "Customer Contact Information",
                     "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "method": null,
                     "fields": null,
@@ -49,7 +49,7 @@
                 },
                 {
                     "enabled": true,
-                    "title": "Partner Contact Informatterion",
+                    "title": "Partner Contact Information",
                     "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "method": null,
                     "fields": null,
@@ -59,7 +59,7 @@
                 },
                 {
                     "enabled": true,
-                    "title": "Nexenta Contact Informatterion",
+                    "title": "Nexenta Contact Information",
                     "paragraph": "Title: *Title*\n\nName: *Name*\n\nEmail: *Email*\n\nPhone: *Phone*",
                     "method": null,
                     "fields": null,
@@ -145,7 +145,7 @@
                     "title": "Interfaces",
                     "paragraph": "Physical network interfaces.",
                     "method": "network/links",
-                    "fields": null,
+                    "fields": ["name", "state", "speed", "class", "mtu"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -175,7 +175,7 @@
                     "title": "IP's",
                     "paragraph": "IP addresses.",
                     "method": "network/addresses",
-                    "fields": null,
+                    "fields": ["name", "interface", "address", "addressType", "state"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -216,7 +216,7 @@
                     "title": "Routing",
                     "paragraph": null,
                     "method": "network/routes",
-                    "fields": null,
+                    "fields": ["destination", "gateway", "static", "interface"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -247,13 +247,13 @@
                     "title": "Pools",
                     "paragraph": null,
                     "method": "storage/pools",
-                    "fields": null,
+                    "fields": ["poolName", "version", "storageCapacity", "storageAllocated"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
                 },
                 {
-                    "enabled": false,
+                    "enabled": true,
                     "title": "Pool Design",
                     "paragraph": null,
                     "method": "storage/pools/{pools}/topology",
@@ -267,7 +267,7 @@
                     "title": "Filesystems",
                     "paragraph": null,
                     "method": "storage/filesystems",
-                    "fields": null,
+                    "fields": ["path", "bytesLogicalUsed", "bytesUsed", "mountPoint"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -277,7 +277,7 @@
                     "title": "Volumes",
                     "paragraph": null,
                     "method": "storage/volumes",
-                    "fields": null,
+                    "fields": ["path", "volumeSize", "bytesLogicalUsed", "bytesUsed"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -307,7 +307,7 @@
                             "title": "Exports",
                             "paragraph": null,
                             "method": "nas/nfs",
-                            "fields": null,
+                            "fields": ["filesystem", "mountPoint", "shareState"],
                             "collector": null,
                             "formatter": "collection",
                             "sections": null
@@ -338,7 +338,7 @@
                             "title": "Shares",
                             "paragraph": null,
                             "method": "nas/smb",
-                            "fields": null,
+                            "fields": ["filesystem", "shareName", "shareState"],
                             "formatter": "collection",
                             "collector": null,
                             "sections": null
@@ -470,22 +470,22 @@
                     "sections": null
                 },
                 {
-                    "enabled": false,
+                    "enabled": true,
                     "title": "High Performance Replication",
                     "paragraph": "High Performance Replication (HPR) is a NexentaStor data and metadata replication and snapshot service which runs on a user defined schedule.",
                     "method": "hpr/services/{hpr}",
                     "fields": null,
-                    "formatter": "collection",
+                    "formatter": "properties",
                     "collector": null,
                     "sections": null
                 },
                 {
-                    "enabled": false,
+                    "enabled": true,
                     "title": "Scrub",
                     "paragraph": "Scrub periodically performs volume cleaning method. It is based on the ZFS capability of using end-to-end checksums to detect data corruption",
                     "method": "storage/pools/{pools}",
                     "fields": ["scrubSchedule"],
-                    "formatter": "collection",
+                    "formatter": "properties",
                     "collector": null,
                     "sections": null
                 }
@@ -505,7 +505,7 @@
                     "title": "CPUs",
                     "paragraph": null,
                     "method": "inventory/cpus",
-                    "fields": null,
+                    "fields": ["chipId", "model", "coreCount"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -515,7 +515,7 @@
                     "title": "Disks",
                     "paragraph": null,
                     "method": "inventory/disks",
-                    "fields": null,
+                    "fields": ["logicalDevice", "model", "location"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null
@@ -535,7 +535,7 @@
                     "title": "HBAs",
                     "paragraph": null,
                     "method": "inventory/hbas",
-                    "fields": null,
+                    "fields": ["model", "adapterId", "portCount", "luCount"],
                     "formatter": "collection",
                     "collector": null,
                     "sections": null

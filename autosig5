@@ -12,16 +12,18 @@ Pete Hartman <pete.hartman@nexenta.com>
 
 import os
 import sys
+import re
 import socket
 import getopt
 import logging
 import requests
 import pprint
 import json
+import time
 import getpass
 
 
-__version__ = "5.0.17"
+__version__ = "5.1.0"
 
 # Logger
 logger = logging.getLogger()
@@ -131,7 +133,7 @@ class Document(object):
         Returns:
             None
         """
-        self._write('%s\n' % string)
+        self._write('%s  \n' % string)
 
     def print_hostname(self, host):
         """
@@ -235,7 +237,7 @@ class Document(object):
             None
         """
         self._write('~~~\n')
-        self._pprint(out)
+        self._write("%s\n" % out)
         self._write('~~~\n')
         self._write('\n')
 
@@ -248,7 +250,7 @@ class Document(object):
         Returns:
             None
         """
-        self._write('\n')
+        self._write('  \n')
 
     def __exit__(self, exc_type, exc_value, traceback):
         # Close file
@@ -513,11 +515,9 @@ def format_collection(output, fields, sig):
     Format an API collection as a table.
 
     Args:
-        output
-        fields
-        sig
-    Returns:
-        None
+        output (dict): API output
+        fields (list): An ordered list of fields to display
+        sig (Document): The SIG document object
     """
     ignore = ["links", "href", "flags"]
     collection = output["data"]
@@ -552,11 +552,9 @@ def format_properties(output, fields, sig):
     Format API properties as a table.
 
     Args:
-        output
-        fields
-        sig
-    Returns:
-        None
+        output (dict): API output
+        fields (list): An ordered list of fields to display
+        sig (Document): The SIG document object
     """
     ignore = ["links", "href", "flags"]
     table = []
@@ -585,11 +583,9 @@ def format_rsf(output, _, sig):
     Format RSF config.
 
     Args:
-        output
-        _
-        sig
-    Returns:
-        None
+        output (dict): API output
+        - (None): Unused but needed for consistency with format callbacks
+        sig (Document): The SIG document object
     """
     try:
         data = output["data"][0]
@@ -599,21 +595,21 @@ def format_rsf(output, _, sig):
     name = data["clusterName"]
     description = data["description"]
     nodes = data["nodes"]
-    heartbeats = data["networkHeartbeats"]
+    # heartbeats = data["networkHeartbeats"]
     services = data["services"]
 
     sig.print_string("Name: %s" % name)
     sig.print_string("Description: %s" % description)
     sig.print_newline()
 
-    sig.print_string("Cluster Configuration")
+    sig.print_paragraph("Cluster Configuration:")
     table = [["Name", "Enabled"]]
     table.append(["Net Monitoring", str(data["networkMonitoringEnabled"])])
     table.append(["FC Monitoring", str(data["fcMonitoringEnabled"])])
     table.append(["Serial Monitoring", str(data["serialHeartbeatEnabled"])])
     sig.print_table(table)
 
-    sig.print_string("Nodes")
+    sig.print_paragraph("Nodes:")
     table = [["Node", "Status", "Address", "Release"]]
     for node in nodes:
         row = []
@@ -626,7 +622,7 @@ def format_rsf(output, _, sig):
 
     # The rsf/clusters endpoint is currently missing relevant info so this
     # section is commented out
-    #sig.print_string("Heartbeats")
+    #sig.print_string("Heartbeats:")
     #table = [["Type", "From", "To", "Peer Address", "Status"]]
     #for hb in heartbeats:
     #    row = []
@@ -636,13 +632,13 @@ def format_rsf(output, _, sig):
     #    row.append(hb["status"])
     #sig.print_table(table)
 
-    sig.print_string("Services")
+    sig.print_paragraph("Services:")
     if services:
         for service in services:
             name = service["serviceName"]
             status = service["status"]
             table = [["Node", "Status"]]
-            sig.print_string(name)
+            sig.print_paragraph(name)
             for s in status:
                 table.append([s["node"], s["status"]])
             sig.print_table(table)
@@ -655,33 +651,38 @@ def format_zpool(output, _, sig):
     Format zpool config.
 
     Args:
-        output
-        -
-        sig
-    Returns:
-        None
+        output (dict): API output
+        - (None): Unused but needed for consistency with format callbacks
+        sig (Document): The SIG document object
     """
     pool = output["poolName"]
     health = output["health"]
     vdevs = output["vdevTree"]["children"]
     capacity = float(output["storageCapacity"])/1024**4
 
-    sig.print_string("Name: %s" % pool)
-    sig.print_string("Health: %s" % health)
-    sig.print_string("Capacity: %0.2fTB" % capacity)
+    sig.print_output("Name: %s" % pool)
+    sig.print_output("Health: %s" % health)
+    sig.print_output("Capacity: %0.2fTB" % capacity)
     # Print the vdev tree
     sig.print_newline()
     for vdev in vdevs:
-        name = vdev["vdevName"]
-        children = vdev["children"]
-        sig.print_string("%s" % name)
-        for child in children:
-            name = child["vdevName"]
-            state = child["diskState"]
-            model = child["diskModel"]
-            location = child["diskLocation"]
-            sig.print_string("\t%s\t%s\t%s\t%s" % (name, state, model,
-                                                   location))
+        try:
+            children = vdev["children"]
+            name = vdev["vdevName"]
+            sig.print_output("%s" % name)
+            for child in children:
+                name = child["vdevName"]
+                state = child["diskState"]
+                model = child["diskModel"]
+                # location = child["diskLocation"]
+                sig.print_output("\t%s %s\t%s" % (name, state, model))
+        except KeyError:
+            # If we are here the pool is a simple stripe with no Protection
+            name = vdev["vdevName"]
+            state = vdev["diskState"]
+            model = vdev["diskModel"]
+            # location = child["diskLocation"]
+            sig.print_output("%s %s\t%s" % (name, state, model))
     sig.print_newline()
 
 
@@ -765,29 +766,79 @@ def validate_section(section):
         sys.exit(1)
 
 
+def exp_wildcard(wildcard, nef):
+    """
+    Expand wildcards defined in the JSON file.
+
+    Args:
+        wildcard (str): The wildcard to expand
+        nef (NEFClient): NEF client object
+    Returns:
+        items (list): A list of items to iterate over
+    """
+    wildcards = {
+        "pools": {
+            "method": "storage/pools",
+            "field": "poolName"
+        },
+        "hpr": {
+            "method": "hpr/services",
+            "field": "name"
+        }
+    }
+    items = []
+
+    # Raise an error if it is an unknown wildcard
+    if wildcard not in wildcards:
+        logger.error("Invalide wildcard '%s' used",  wildcard)
+        sys.exit(1)
+
+    try:
+        output = nef.get(wildcards[wildcard]["method"])
+    except requests.exceptions.HTTPError as exc:
+        logger.error(str(exc))
+        sys.exit(1)
+
+    for i in output["data"]:
+        items.append(i[wildcards[wildcard]["field"]])
+
+    return items
+
+
 def execute_api(nef, method, fields, formatcb, sig):
     """
     Execute the API request and format the response using the format callback.
 
     Args:
-        nef
-        method
-        fields
-        formatcb
-        sig
-    Returns:
-        None
+        nef (NEFClient): NEF client object
+        method (str): API method
+        fields (list): A list of fields to query
+        formatcb (function): The format callback function
+        sig (Document): The SIG document object
     """
     if fields is not None:
         params = {"fields": ",".join(fields)}
     else:
         params = None
-    try:
-        output = nef.get(method, params=params)
-    except requests.exceptions.HTTPError as exc:
-        logger.error(str(exc))
-        sys.exit(1)
-    formatcb(output, fields, sig)
+    m = re.search("{(.+)}", method)
+    if m is None:
+        try:
+            output = nef.get(method, params=params)
+        except requests.exceptions.HTTPError as exc:
+            logger.error(str(exc))
+            sys.exit(1)
+        formatcb(output, fields, sig)
+    else:
+        wildcard = m.group(1)
+        items = exp_wildcard(wildcard, nef)
+        for i in items:
+            sig.print_paragraph(i)
+            try:
+                output = nef.get(re.sub("{(.+)}", i, method), params=params)
+            except requests.exceptions.HTTPError as exc:
+                logger.error(str(exc))
+                sys.exit(1)
+            formatcb(output, fields, sig)
 
 
 def build_section(section, level, nodes, sig):
@@ -920,10 +971,17 @@ def main():
                                          password=password)))
 
     # Open the output file
-    fname = "nexenta-autosig-%s.txt" % "-".join([n[0] for n in nodes])
+    date = time.localtime(time.time())
+    fname = "nexenta-autosig-%s-%s.txt" % ("-".join([n[0] for n in nodes]),
+                                           time.strftime('%Y%m%d-%H%M%S',
+                                                         date))
     output = os.path.join(dst, fname)
     sig = Document(output)
     logger.info("Writing output to %s", output)
+
+    # Write date
+    sig.print_version("Generated %s" % time.strftime('%Y-%m-%d %H:%M:%S',
+                                                     date))
 
     # Write the version number
     logger.info("Auto-SIG v%s", __version__)
