@@ -111,11 +111,31 @@
             "sections": [
                 {
                     "enabled": true,
-                    "title": "Mailer",
+                    "title": "SMTP Settings",
                     "paragraph": "The appliance mailer is used to communicate failures and weekly status reports.",
-                    "method": "services/smtp",
+                    "method": "settings/properties?nameStartsWith=smtp",
                     "fields": null,
-                    "formatter": "properties",
+                    "formatter": "collectionprop",
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "System Administrator Email Address",
+                    "paragraph": "The email address of the primary system administrator(s).",
+                    "method": "settings/properties?nameStartsWith=system.administratorEmail",
+                    "fields": null,
+                    "formatter": "collectionprop",
+                    "collector": null,
+                    "sections": null
+                },
+                {
+                    "enabled": true,
+                    "title": "Alert Notifications",
+                    "paragraph": "Email address to send alerts to and alert subscriptions.",
+                    "method": "settings/properties?nameStartsWith=alert",
+                    "fields": null,
+                    "formatter": "collectionprop",
                     "collector": null,
                     "sections": null
                 },
