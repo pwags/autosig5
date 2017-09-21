@@ -5,9 +5,10 @@ autosig5
 
 Generates the System Implementation Guide on NexentaStor 5.
 
-Copyright (c) 2016  Nexenta Systems
+Copyright (c) 2016-2017  Nexenta Systems
 William Kettler <william.kettler@nexenta.com>
 Pete Hartman <pete.hartman@nexenta.com>
+Phillip Wagstrom <phillip.wagstrom@nexenta.com>
 """
 
 import os
@@ -519,7 +520,7 @@ def format_collection(output, fields, sig):
         fields (list): An ordered list of fields to display
         sig (Document): The SIG document object
     """
-    ignore = ["links", "href", "flags"]
+    ignore = ["links", "href", "flags", "schema"]
     collection = output["data"]
     table = []
     headers = []
@@ -546,6 +547,41 @@ def format_collection(output, fields, sig):
 
     sig.print_table(table)
 
+def format_collectionprop(output, fields, sig):
+    """
+    Format an API collection as a table.
+    Modified by pwags
+
+    Args:
+        output (dict): API output
+        fields (list): An ordered list of fields to display
+        sig (Document): The SIG document object
+    """
+    ignore = ["links", "href", "flags", "schema"]
+    collection = output["data"]
+    table = []
+    headers = ["name", "value"]
+
+    # Do not continue if the list is empty
+    if not collection:
+        return
+
+    table.append([h.capitalize() for h in headers])
+    for c in collection:
+        for i in ignore:
+            if i in c.keys():
+                c.pop(i)
+        # Build the table
+        row = []
+        for h in headers:
+            if h in c.keys():
+                row.append(str(c[h]))
+            else:
+                row.append("-")
+        table.append(row)
+
+    sig.print_table(table)
+
 
 def format_properties(output, fields, sig):
     """
@@ -556,7 +592,7 @@ def format_properties(output, fields, sig):
         fields (list): An ordered list of fields to display
         sig (Document): The SIG document object
     """
-    ignore = ["links", "href", "flags"]
+    ignore = ["links", "href", "flags", "schema"]
     table = []
     # Add generic table headers
     table.append(["Name", "Value"])
